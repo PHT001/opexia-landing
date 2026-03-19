@@ -265,8 +265,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : "";
-    console.error("Booking error:", message, stack);
-    return NextResponse.json({ error: "Erreur serveur", details: message }, { status: 500 });
+    console.error("Booking error:", message);
+    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL || "MISSING";
+    const keyPrefix = (process.env.GOOGLE_PRIVATE_KEY || "").substring(0, 10);
+    return NextResponse.json({ error: "Erreur serveur", details: message, debug: { clientEmail, keyPrefix } }, { status: 500 });
   }
 }
