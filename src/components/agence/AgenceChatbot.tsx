@@ -322,9 +322,9 @@ export default function AgenceChatbot() {
   /* WhatsApp question link */
   const handleWhatsAppQuestion = () => {
     const context =
-      answers.name && answers.sector
-        ? `Bonjour, c'est ${answers.name}. J'ai une question concernant vos services d'automatisation IA.\n\nSecteur : ${answers.sector}\nBesoin : ${answers.pain}\n\n(Envoyé depuis opexia-agency.com)`
-        : `Bonjour, j'ai une question concernant vos services d'automatisation IA.\n\n(Envoyé depuis opexia-agency.com)`;
+      answers.name
+        ? `Bonjour, c'est ${answers.name}. J'ai une question concernant vos services d'automatisation IA.`
+        : `Bonjour, j'ai une question concernant vos services d'automatisation IA.`;
     const msg = encodeURIComponent(context);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
   };
