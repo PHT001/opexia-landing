@@ -8,6 +8,64 @@ const OWNER_EMAIL = "contact@opexia-agency.com";
    Format: "2026-03-20T14:00" */
 const bookedSlots = new Set<string>();
 
+/* ───── Generate .ics calendar invite ───── */
+function generateICS({
+  name,
+  email,
+  sector,
+  pain,
+  slotKey,
+  meetLink,
+}: {
+  name: string;
+  email: string;
+  sector: string;
+  pain: string;
+  slotKey: string;
+  meetLink: string;
+}): string {
+  // slotKey format: "2026-03-20T14:00"
+  const [date, time] = slotKey.split("T");
+  const [year, month, day] = date.split("-");
+  const [hour, minute] = time.split(":");
+  const startH = parseInt(hour, 10);
+  const endH = startH + 1;
+
+  const dtStart = `${year}${month}${day}T${String(startH).padStart(2, "0")}${minute}00`;
+  const dtEnd = `${year}${month}${day}T${String(endH).padStart(2, "0")}${minute}00`;
+  const now = new Date();
+  const stamp = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}T${String(now.getUTCHours()).padStart(2, "0")}${String(now.getUTCMinutes()).padStart(2, "0")}${String(now.getUTCSeconds()).padStart(2, "0")}Z`;
+  const uid = `${slotKey}-${Date.now()}@opexia-agency.com`;
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//OpexIA//Booking//FR",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=Europe/Paris:${dtStart}`,
+    `DTEND;TZID=Europe/Paris:${dtEnd}`,
+    `SUMMARY:Audit OpexIA — ${name}`,
+    `DESCRIPTION:Prospect: ${name}\\nEmail: ${email}\\nSecteur: ${sector}\\nBesoin: ${pain}${meetLink ? `\\nGoogle Meet: ${meetLink}` : ""}`,
+    `ORGANIZER;CN=OpexIA:mailto:${OWNER_EMAIL}`,
+    `ATTENDEE;CN=${name}:mailto:${email || OWNER_EMAIL}`,
+    meetLink ? `URL:${meetLink}` : "",
+    "STATUS:CONFIRMED",
+    "BEGIN:VALARM",
+    "TRIGGER:-PT15M",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:RDV dans 15 minutes",
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ]
+    .filter(Boolean)
+    .join("\r\n");
+}
+
 /* ───── GET: return booked slots ───── */
 export async function GET() {
   return NextResponse.json({ booked: Array.from(bookedSlots) });
@@ -33,6 +91,10 @@ export async function POST(req: Request) {
 
     const isGoogleMeet = contactMethod === "Google Meet";
     const meetLink = process.env.GOOGLE_MEET_LINK || "";
+
+    // Generate .ics calendar invite
+    const icsContent = generateICS({ name, email: email || "", sector, pain, slotKey, meetLink });
+    const icsBase64 = Buffer.from(icsContent).toString("base64");
 
     // Email to prospect
     if (email) {
@@ -79,10 +141,17 @@ export async function POST(req: Request) {
             </p>
           </div>
         `,
+        attachments: [
+          {
+            filename: "rdv-opexia.ics",
+            content: icsBase64,
+            contentType: "text/calendar; method=REQUEST",
+          },
+        ],
       });
     }
 
-    // Email notification to you
+    // Email notification to you (with .ics so it appears in Outlook calendar)
     await resend.emails.send({
       from: `OpexIA Bot <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
       to: OWNER_EMAIL,
@@ -101,6 +170,13 @@ export async function POST(req: Request) {
           </table>
         </div>
       `,
+      attachments: [
+        {
+          filename: "rdv-opexia.ics",
+          content: icsBase64,
+          contentType: "text/calendar; method=REQUEST",
+        },
+      ],
     });
 
     return NextResponse.json({ ok: true });
