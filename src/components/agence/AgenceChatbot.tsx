@@ -7,7 +7,6 @@ import Image from "next/image";
 /* ───────── Types ───────── */
 type Step =
   | "sector"
-  | "pain"
   | "contact"
   | "name"
   | "email"
@@ -31,18 +30,15 @@ interface Choice {
 const WHATSAPP_NUMBER = "33756803717";
 
 const SECTORS: Choice[] = [
+  { label: "🏪 Commerce / Retail", value: "Commerce / Retail" },
+  { label: "🏗️ BTP / Artisanat", value: "BTP / Artisanat" },
+  { label: "💼 Consulting / Services", value: "Consulting / Services" },
+  { label: "🏥 Santé / Bien-être", value: "Santé / Bien-être" },
   { label: "🏠 Immobilier", value: "Immobilier" },
-  { label: "🛒 E-commerce", value: "E-commerce" },
-  { label: "💼 Services B2B", value: "Services B2B" },
-  { label: "🍽️ Restauration", value: "Restauration" },
+  { label: "📚 Formation / Coaching", value: "Formation / Coaching" },
+  { label: "🏭 Industrie / Logistique", value: "Industrie / Logistique" },
+  { label: "💻 Tech / Digital", value: "Tech / Digital" },
   { label: "🏢 Autre", value: "Autre" },
-];
-
-const PAINS: Choice[] = [
-  { label: "📞 Prospection / relance", value: "Prospection et relance clients" },
-  { label: "💬 Support client / SAV", value: "Support client et SAV" },
-  { label: "📋 Gestion admin", value: "Gestion administrative" },
-  { label: "✍️ Création de contenu", value: "Création de contenu" },
 ];
 
 const CONTACTS: Choice[] = [
@@ -50,12 +46,6 @@ const CONTACTS: Choice[] = [
   { label: "💻 Google Meet", value: "Google Meet" },
 ];
 
-const TIME_SAVINGS: Record<string, string> = {
-  "Prospection et relance clients": "15 à 25h",
-  "Support client et SAV": "10 à 20h",
-  "Gestion administrative": "12 à 18h",
-  "Création de contenu": "8 à 15h",
-};
 
 const EMAIL_DOMAINS = [
   "@gmail.com",
@@ -111,7 +101,6 @@ export default function AgenceChatbot() {
   const [inputValue, setInputValue] = useState("");
   const [answers, setAnswers] = useState({
     sector: "",
-    pain: "",
     contactMethod: "",
     name: "",
     email: "",
@@ -230,25 +219,14 @@ export default function AgenceChatbot() {
     switch (step) {
       case "sector":
         setAnswers((prev) => ({ ...prev, sector: choice.value }));
-        setStep("pain");
-        await addBotMessage(
-          "C'est quoi qui vous prend le plus de temps au quotidien ?",
-          700
-        );
-        break;
-
-      case "pain": {
-        setAnswers((prev) => ({ ...prev, pain: choice.value }));
-        const savings = TIME_SAVINGS[choice.value] || "10 à 20h";
         setStep("contact");
         await addBotMessage(
-          `On peut vous faire gagner ${savings} par mois. Résultats en 14 jours. 🚀`,
-          900,
-          savings
+          "Top ! On peut automatiser une bonne partie de vos tâches. Résultats en 14 jours. 🚀",
+          800,
+          "14 jours"
         );
         await addBotMessage("Comment on en discute ?", 600);
         break;
-      }
 
       case "contact":
         setAnswers((prev) => ({ ...prev, contactMethod: choice.value }));
@@ -382,7 +360,7 @@ export default function AgenceChatbot() {
   const handleReset = () => {
     setMessages([]);
     setStep("sector");
-    setAnswers({ sector: "", pain: "", contactMethod: "", name: "", email: "", phone: "", schedule: "" });
+    setAnswers({ sector: "", contactMethod: "", name: "", email: "", phone: "", schedule: "" });
     setInputValue("");
     setSelectedDay(null);
     setStarted(false);
@@ -396,13 +374,12 @@ export default function AgenceChatbot() {
   const getCurrentOptions = (): Choice[] => {
     switch (step) {
       case "sector": return SECTORS;
-      case "pain": return PAINS;
       case "contact": return CONTACTS;
       default: return [];
     }
   };
 
-  const showOptions = ["sector", "pain", "contact"].includes(step) && !isTyping;
+  const showOptions = ["sector", "contact"].includes(step) && !isTyping;
   const showInput = (step === "name" || step === "email" || step === "phone") && !isTyping;
   const showSchedule = step === "schedule" && !isTyping;
   const showDone = step === "done" && !isTyping;
@@ -425,9 +402,9 @@ export default function AgenceChatbot() {
 
   /* Progress */
   const stepMap: Record<Step, number> = {
-    sector: 1, pain: 2, contact: 3, name: 4, email: 5, schedule: 6, phone: 5, done: 6,
+    sector: 1, contact: 2, name: 3, email: 4, schedule: 5, phone: 4, done: 5,
   };
-  const progress = Math.min((stepMap[step] / 6) * 100, 100);
+  const progress = Math.min((stepMap[step] / 5) * 100, 100);
 
   /* Input placeholder & type */
   const getInputProps = () => {
