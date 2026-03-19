@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import LazyVideo from "@/components/ui/LazyVideo";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 import AuditAnimation from "./AuditAnimation";
 import PlanAnimation from "./PlanAnimation";
 import DeployAnimation from "./DeployAnimation";
@@ -103,15 +103,15 @@ export default function ProcessSteps() {
           <div className="relative z-0 w-36 sm:w-44 -mb-14 mx-auto overflow-hidden" style={{ maskImage: 'radial-gradient(ellipse 65% 65% at center, black 40%, transparent 95%)', WebkitMaskImage: 'radial-gradient(ellipse 65% 65% at center, black 40%, transparent 95%)' }}>
             <LazyVideo src="/images/floatting.mp4" className="w-full h-auto" />
           </div>
-          <a
-            href={WHATSAPP_URL}
+          <button
+            onClick={openLeadBot}
             className="relative z-10 inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
           >
             {"Lancer mon audit gratuit"}
             <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>

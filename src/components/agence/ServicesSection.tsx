@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 const services = [
   {
@@ -227,15 +227,15 @@ export default function ServicesSection() {
           viewport={{ once: true }}
           className="text-center mt-14"
         >
-          <a
-            href={WHATSAPP_URL}
+          <button
+            onClick={openLeadBot}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             {"D\u00e9couvrir ce qu'on peut faire pour vous"}
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>

@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import LazyVideo from "@/components/ui/LazyVideo";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 const rotatingWords = ["automatise", "acc\u00e9l\u00e8re", "optimise"];
 
@@ -132,15 +132,15 @@ export default function AgenceHero() {
               transition={{ duration: 0.7, delay: 0.3 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
             >
-              <a
-                href={WHATSAPP_URL}
+              <button
+                onClick={openLeadBot}
                 className="group inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
               >
                 Obtenir mon audit offert
                 <svg className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </a>
+              </button>
               <a href="#resultats" className="text-[#6B7280] text-sm font-medium hover:text-[#111] transition-colors flex items-center gap-1.5 py-4">
                 Voir les r&eacute;sultats &darr;
               </a>

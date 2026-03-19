@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 const timeline = [
   { year: "2023", event: "ChatGPT explose. Tout le monde en parle, personne n'agit.", opacity: "text-white/30" },
@@ -91,15 +91,15 @@ export default function UrgencyTimeline() {
           viewport={{ once: true }}
           className="text-center mt-14"
         >
-          <a
-            href={WHATSAPP_URL}
+          <button
+            onClick={openLeadBot}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             Demander mon diagnostic IA
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 const footerLinks = [
   { label: "Services", href: "#services" },
@@ -27,15 +27,15 @@ export default function AgenceFooter() {
             <p className="text-lg sm:text-xl text-[#6B7280] mb-6">
               <strong className="text-[#111]">1 heure</strong> pour d&eacute;couvrir ce que l&apos;IA peut changer. <strong className="text-[#111]">Gratuit.</strong>
             </p>
-            <a
-              href={WHATSAPP_URL}
+            <button
+              onClick={openLeadBot}
               className="inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-bold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-500/20"
             >
               Prendre rendez-vous gratuit
               <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
-            </a>
+            </button>
           </motion.div>
         </div>
       </div>
@@ -65,12 +65,12 @@ export default function AgenceFooter() {
               )}
             </nav>
 
-            <a
-              href={WHATSAPP_URL}
+            <button
+              onClick={openLeadBot}
               className="text-sm font-semibold text-[#007AFF] hover:text-[#0055D4] transition-colors"
             >
               R&eacute;server un audit &rarr;
-            </a>
+            </button>
           </div>
 
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">

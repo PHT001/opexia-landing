@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 const testimonials = [
   {
@@ -203,15 +203,15 @@ export default function AgenceTestimonials() {
 
         {/* CTA */}
         <div className="text-center mt-16">
-          <a
-            href={WHATSAPP_URL}
+          <button
+            onClick={openLeadBot}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-200"
           >
             Demandez votre audit offert
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </button>
         </div>
       </div>
     </section>

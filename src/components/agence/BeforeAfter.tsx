@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 const cases = [
   {
@@ -241,15 +241,15 @@ export default function BeforeAfter() {
           viewport={{ once: true }}
           className="text-center mt-12"
         >
-          <a
-            href={WHATSAPP_URL}
+          <button
+            onClick={openLeadBot}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             R&eacute;server mon audit gratuit
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>

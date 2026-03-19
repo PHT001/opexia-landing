@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { openLeadBot } from "@/lib/constants";
 
 type Phase = "question" | "typing" | "results";
 
@@ -327,15 +327,15 @@ export default function SectorChat() {
                               transition={{ delay: 0.8 }}
                               className="flex flex-col sm:flex-row items-center gap-3 mt-3"
                             >
-                              <a
-                                href={WHATSAPP_URL}
+                              <button
+                                onClick={openLeadBot}
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#007AFF] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-lg hover:shadow-blue-200"
                               >
                                 Planifier mon audit offert
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                 </svg>
-                              </a>
+                              </button>
                               <button
                                 onClick={handleReset}
                                 className="text-sm text-[#6B7280] hover:text-[#111] transition-colors cursor-pointer"
