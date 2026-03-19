@@ -117,12 +117,38 @@ export default function AgenceChatbot() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
     } else {
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
     }
     return () => {
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
     };
+  }, [isOpen]);
+
+  /* Handle iOS virtual keyboard resize */
+  useEffect(() => {
+    if (!isOpen) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const onResize = () => {
+      // Scroll to bottom when keyboard opens/closes
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    };
+
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
   }, [isOpen]);
 
   /* Auto-scroll */
@@ -612,12 +638,13 @@ export default function AgenceChatbot() {
                             : "given-name"
                         }
                         autoCapitalize={step === "email" ? "none" : "words"}
-                        className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
+                        className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-base outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
+                        style={{ fontSize: "16px" }}
                       />
                       <button
                         type="submit"
                         disabled={!inputValue.trim()}
-                        className="h-10 w-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
+                        className="h-11 w-11 rounded-full bg-[#007AFF] text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
