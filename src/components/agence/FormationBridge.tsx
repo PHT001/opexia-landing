@@ -25,7 +25,7 @@ export default function FormationBridge() {
 
           <div className="mt-8">
             <a
-              href="https://calendly.com/opexiapro/audit-ia-gratuit"
+              href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
               className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] hover:shadow-lg hover:shadow-blue-500/25 transition-all"
             >
               D&eacute;couvrir mon potentiel IA

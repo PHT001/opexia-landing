@@ -27,7 +27,7 @@ export default function AgenceFooter() {
               <strong className="text-[#111]">1 heure</strong> pour d&eacute;couvrir ce que l&apos;IA peut changer. <strong className="text-[#111]">Gratuit.</strong>
             </p>
             <a
-              href="https://calendly.com/opexiapro/audit-ia-gratuit"
+              href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
               className="inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-bold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-500/20"
             >
               Prendre rendez-vous gratuit
@@ -65,7 +65,7 @@ export default function AgenceFooter() {
             </nav>
 
             <a
-              href="https://calendly.com/opexiapro/audit-ia-gratuit"
+              href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
               className="text-sm font-semibold text-[#007AFF] hover:text-[#0055D4] transition-colors"
             >
               R&eacute;server un audit &rarr;

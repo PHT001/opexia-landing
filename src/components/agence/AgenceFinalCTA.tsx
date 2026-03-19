@@ -29,7 +29,7 @@ export default function AgenceFinalCTA() {
 
           <div className="mt-10">
             <a
-              href="#calendly"
+              href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
               className="inline-flex items-center justify-center rounded-full bg-[#007AFF] px-10 py-5 text-lg font-bold text-white transition-all hover:bg-[#0055D4] hover:shadow-2xl hover:shadow-blue-900/40"
             >
               Acc&eacute;der &agrave; mon audit gratuit
