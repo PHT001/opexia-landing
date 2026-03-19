@@ -6,13 +6,12 @@ import Image from "next/image";
 
 /* ───────── Types ───────── */
 type Step =
-  | "welcome"
   | "sector"
   | "pain"
-  | "team"
   | "contact"
   | "name"
   | "email"
+  | "schedule"
   | "phone"
   | "done";
 
@@ -46,13 +45,6 @@ const PAINS: Choice[] = [
   { label: "✍️ Création de contenu", value: "Création de contenu" },
 ];
 
-const TEAMS: Choice[] = [
-  { label: "Solo", value: "Solo" },
-  { label: "2-10", value: "2-10" },
-  { label: "11-50", value: "11-50" },
-  { label: "50+", value: "50+" },
-];
-
 const CONTACTS: Choice[] = [
   { label: "📞 Appel WhatsApp · 15 min", value: "Appel WhatsApp" },
   { label: "💻 Google Meet", value: "Google Meet" },
@@ -72,6 +64,23 @@ const EMAIL_DOMAINS = [
   "@yahoo.fr",
   "@icloud.com",
 ];
+
+const SLOTS = ["10:00", "11:00", "14:00", "15:30", "17:00"];
+const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+const MONTH_NAMES = ["jan", "fév", "mar", "avr", "mai", "jun", "jul", "aoû", "sep", "oct", "nov", "déc"];
+
+function getNextBusinessDays(count: number): Date[] {
+  const days: Date[] = [];
+  const d = new Date();
+  d.setDate(d.getDate() + 1); // start tomorrow
+  while (days.length < count) {
+    if (d.getDay() !== 0 && d.getDay() !== 6) {
+      days.push(new Date(d));
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
 
 /* ───────── Helper: open bot from anywhere ───────── */
 export function openLeadBot() {
@@ -95,23 +104,25 @@ function RenderText({ text, bold }: { text: string; bold?: string }) {
 /* ───────── Component ───────── */
 export default function AgenceChatbot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<Step>("welcome");
+  const [step, setStep] = useState<Step>("sector");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [answers, setAnswers] = useState({
     sector: "",
     pain: "",
-    team: "",
     contactMethod: "",
     name: "",
     email: "",
     phone: "",
+    schedule: "",
   });
   const [started, setStarted] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const businessDays = useRef(getNextBusinessDays(5)).current;
 
   /* Lock body scroll on mobile when chat is open */
   useEffect(() => {
@@ -139,14 +150,11 @@ export default function AgenceChatbot() {
     if (!isOpen) return;
     const vv = window.visualViewport;
     if (!vv) return;
-
     const onResize = () => {
-      // Scroll to bottom when keyboard opens/closes
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     };
-
     vv.addEventListener("resize", onResize);
     return () => vv.removeEventListener("resize", onResize);
   }, [isOpen]);
@@ -165,7 +173,7 @@ export default function AgenceChatbot() {
     return () => window.removeEventListener("openLeadBot", handler);
   }, []);
 
-  /* Start conversation on first open */
+  /* Start conversation on first open — go straight to first question */
   useEffect(() => {
     if (isOpen && !started) {
       setStarted(true);
@@ -205,14 +213,11 @@ export default function AgenceChatbot() {
     ]);
   };
 
+  /* Start straight with first question */
   const startConversation = async () => {
-    await addBotMessage("Salut ! 👋 Je suis l'assistant OpexIA.", 500);
-    await addBotMessage(
-      "En 30 secondes, on va voir comment l'IA peut vous faire gagner du temps. C'est parti ?",
-      900,
-      "30 secondes"
-    );
-    setStep("welcome");
+    await addBotMessage("Salut ! 👋 En 30 secondes on va voir comment vous aider.", 500, "30 secondes");
+    await addBotMessage("Vous êtes dans quel secteur ?", 700);
+    setStep("sector");
   };
 
   /* Handle button choices */
@@ -220,11 +225,6 @@ export default function AgenceChatbot() {
     addUserMessage(choice.label);
 
     switch (step) {
-      case "welcome":
-        setStep("sector");
-        await addBotMessage("Cool ! Vous êtes dans quel secteur ?", 600);
-        break;
-
       case "sector":
         setAnswers((prev) => ({ ...prev, sector: choice.value }));
         setStep("pain");
@@ -234,32 +234,23 @@ export default function AgenceChatbot() {
         );
         break;
 
-      case "pain":
+      case "pain": {
         setAnswers((prev) => ({ ...prev, pain: choice.value }));
-        setStep("team");
-        await addBotMessage("Vous êtes combien dans l'équipe ?", 600);
-        break;
-
-      case "team": {
-        setAnswers((prev) => ({ ...prev, team: choice.value }));
-        const savings = TIME_SAVINGS[answers.pain] || "10 à 20h";
+        const savings = TIME_SAVINGS[choice.value] || "10 à 20h";
         setStep("contact");
         await addBotMessage(
-          `Top ! On peut vous faire gagner ${savings} par mois. Résultats en 14 jours. 🚀`,
-          1000,
+          `On peut vous faire gagner ${savings} par mois. Résultats en 14 jours. 🚀`,
+          900,
           savings
         );
-        await addBotMessage(
-          "Comment vous préférez qu'on en discute ?",
-          600
-        );
+        await addBotMessage("Comment on en discute ?", 600);
         break;
       }
 
       case "contact":
         setAnswers((prev) => ({ ...prev, contactMethod: choice.value }));
         setStep("name");
-        await addBotMessage("Super ! C'est quoi votre prénom ?", 600);
+        await addBotMessage("C'est quoi votre prénom ?", 600);
         break;
     }
   };
@@ -268,6 +259,21 @@ export default function AgenceChatbot() {
   const applyEmailSuggestion = (fullEmail: string) => {
     setInputValue(fullEmail);
     setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  /* Handle schedule slot selection */
+  const handleSlotSelect = async (slot: string) => {
+    if (!selectedDay) return;
+    const dayLabel = `${DAY_NAMES[selectedDay.getDay()]} ${selectedDay.getDate()} ${MONTH_NAMES[selectedDay.getMonth()]}`;
+    const scheduleText = `${dayLabel} à ${slot}`;
+    setAnswers((prev) => ({ ...prev, schedule: scheduleText }));
+    addUserMessage(`📅 ${scheduleText}`);
+    setStep("done");
+    await addBotMessage(
+      `Parfait ${answers.name} ! 🎉 RDV Google Meet le ${scheduleText}. L'invitation arrive sur ${answers.email}.`,
+      800
+    );
+    await addBotMessage("Une question en attendant ? On reste dispo 👇", 600);
   };
 
   /* Handle text input (name / email / phone) */
@@ -296,15 +302,8 @@ export default function AgenceChatbot() {
       }
     } else if (step === "email") {
       setAnswers((prev) => ({ ...prev, email: value }));
-      setStep("done");
-      await addBotMessage(
-        `C'est noté ${answers.name} ! 🎉 On vous envoie l'invitation Meet dans les 24h.`,
-        800
-      );
-      await addBotMessage(
-        "Une question en attendant ? On reste dispo 👇",
-        600
-      );
+      setStep("schedule");
+      await addBotMessage("Top ! Choisissez un créneau qui vous arrange 👇", 700);
     } else if (step === "phone") {
       setAnswers((prev) => ({ ...prev, phone: value }));
       setStep("done");
@@ -312,19 +311,15 @@ export default function AgenceChatbot() {
         `C'est noté ${answers.name} ! 🎉 On vous appelle sur WhatsApp dans les 24h.`,
         800
       );
-      await addBotMessage(
-        "Une question en attendant ? On reste dispo 👇",
-        600
-      );
+      await addBotMessage("Une question en attendant ? On reste dispo 👇", 600);
     }
   };
 
   /* WhatsApp question link */
   const handleWhatsAppQuestion = () => {
-    const context =
-      answers.name
-        ? `Bonjour, c'est ${answers.name}. J'ai une question concernant vos services d'automatisation IA.`
-        : `Bonjour, j'ai une question concernant vos services d'automatisation IA.`;
+    const context = answers.name
+      ? `Bonjour, c'est ${answers.name}. J'ai une question concernant vos services d'automatisation IA.`
+      : `Bonjour, j'ai une question concernant vos services d'automatisation IA.`;
     const msg = encodeURIComponent(context);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
   };
@@ -332,17 +327,10 @@ export default function AgenceChatbot() {
   /* Reset conversation */
   const handleReset = () => {
     setMessages([]);
-    setStep("welcome");
-    setAnswers({
-      sector: "",
-      pain: "",
-      team: "",
-      contactMethod: "",
-      name: "",
-      email: "",
-      phone: "",
-    });
+    setStep("sector");
+    setAnswers({ sector: "", pain: "", contactMethod: "", name: "", email: "", phone: "", schedule: "" });
     setInputValue("");
+    setSelectedDay(null);
     setStarted(false);
     setTimeout(() => {
       setStarted(true);
@@ -353,44 +341,28 @@ export default function AgenceChatbot() {
   /* Current options based on step */
   const getCurrentOptions = (): Choice[] => {
     switch (step) {
-      case "welcome":
-        return [{ label: "C'est parti ! 🚀", value: "start" }];
-      case "sector":
-        return SECTORS;
-      case "pain":
-        return PAINS;
-      case "team":
-        return TEAMS;
-      case "contact":
-        return CONTACTS;
-      default:
-        return [];
+      case "sector": return SECTORS;
+      case "pain": return PAINS;
+      case "contact": return CONTACTS;
+      default: return [];
     }
   };
 
-  const showOptions =
-    ["welcome", "sector", "pain", "team", "contact"].includes(step) && !isTyping;
-  const showInput =
-    (step === "name" || step === "email" || step === "phone") && !isTyping;
+  const showOptions = ["sector", "pain", "contact"].includes(step) && !isTyping;
+  const showInput = (step === "name" || step === "email" || step === "phone") && !isTyping;
+  const showSchedule = step === "schedule" && !isTyping;
   const showDone = step === "done" && !isTyping;
   const options = getCurrentOptions();
 
-  /* Email suggestions: show as soon as user types anything */
+  /* Email suggestions */
   const emailLocalPart = inputValue.split("@")[0];
-  const emailHasFullDomain =
-    inputValue.includes("@") &&
-    inputValue.split("@")[1]?.includes(".");
-  const showEmailSuggestions =
-    step === "email" &&
-    emailLocalPart.length > 0 &&
-    !emailHasFullDomain;
+  const emailHasFullDomain = inputValue.includes("@") && inputValue.split("@")[1]?.includes(".");
+  const showEmailSuggestions = step === "email" && emailLocalPart.length > 0 && !emailHasFullDomain;
 
   const getEmailSuggestions = () => {
     const local = emailLocalPart;
     if (!local) return [];
-    const afterAt = inputValue.includes("@")
-      ? inputValue.split("@")[1]?.toLowerCase() || ""
-      : "";
+    const afterAt = inputValue.includes("@") ? inputValue.split("@")[1]?.toLowerCase() || "" : "";
     return EMAIL_DOMAINS.filter((d) => {
       if (!afterAt) return true;
       return d.toLowerCase().startsWith("@" + afterAt);
@@ -398,23 +370,18 @@ export default function AgenceChatbot() {
   };
 
   /* Progress */
-  const stepOrder: Step[] = [
-    "welcome", "sector", "pain", "team", "contact", "name", "email", "phone", "done",
-  ];
-  const currentIndex = stepOrder.indexOf(step);
-  const progress = Math.min(((currentIndex + 1) / 8) * 100, 100);
+  const stepMap: Record<Step, number> = {
+    sector: 1, pain: 2, contact: 3, name: 4, email: 5, schedule: 6, phone: 5, done: 6,
+  };
+  const progress = Math.min((stepMap[step] / 6) * 100, 100);
 
   /* Input placeholder & type */
   const getInputProps = () => {
     switch (step) {
-      case "name":
-        return { placeholder: "Votre prénom...", type: "text" };
-      case "email":
-        return { placeholder: "votre@email.com", type: "email" };
-      case "phone":
-        return { placeholder: "06 XX XX XX XX", type: "tel" };
-      default:
-        return { placeholder: "", type: "text" };
+      case "name": return { placeholder: "Votre prénom...", type: "text" };
+      case "email": return { placeholder: "votre@email.com", type: "email" };
+      case "phone": return { placeholder: "06 XX XX XX XX", type: "tel" };
+      default: return { placeholder: "", type: "text" };
     }
   };
 
@@ -434,18 +401,8 @@ export default function AgenceChatbot() {
             onClick={() => setIsOpen(true)}
             className="fixed bottom-5 right-5 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-[#007AFF] text-white shadow-xl shadow-blue-900/30"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <span className="absolute inset-0 rounded-full bg-[#007AFF] animate-ping opacity-20" />
           </motion.button>
@@ -456,7 +413,6 @@ export default function AgenceChatbot() {
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Mobile backdrop - covers everything */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -481,13 +437,7 @@ export default function AgenceChatbot() {
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative flex-shrink-0">
                     <div className="h-9 w-9 rounded-full overflow-hidden">
-                      <Image
-                        src="/images/logobleu.png"
-                        alt="OpexIA"
-                        width={36}
-                        height={36}
-                        className="h-full w-full object-cover"
-                      />
+                      <Image src="/images/logobleu.png" alt="OpexIA" width={36} height={36} className="h-full w-full object-cover" />
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0A0A0A] bg-green-400" />
                   </div>
@@ -519,19 +469,14 @@ export default function AgenceChatbot() {
               </div>
 
               {/* Messages Area */}
-              <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 space-y-2.5"
-              >
+              <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 space-y-2.5">
                 {messages.map((msg) => (
                   <motion.div
                     key={msg.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25 }}
-                    className={`flex ${
-                      msg.role === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
                       className={`rounded-2xl px-3.5 py-2.5 text-[13px] sm:text-sm leading-relaxed break-words ${
@@ -545,13 +490,8 @@ export default function AgenceChatbot() {
                   </motion.div>
                 ))}
 
-                {/* Typing dots */}
                 {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-start"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
                     <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                       <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -559,7 +499,6 @@ export default function AgenceChatbot() {
                     </div>
                   </motion.div>
                 )}
-
                 <div />
               </div>
 
@@ -600,7 +539,6 @@ export default function AgenceChatbot() {
                     exit={{ opacity: 0, y: 10 }}
                     className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
                   >
-                    {/* Email suggestions - show as soon as user types */}
                     <AnimatePresence>
                       {showEmailSuggestions && getEmailSuggestions().length > 0 && (
                         <motion.div
@@ -630,13 +568,7 @@ export default function AgenceChatbot() {
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder={inputProps.placeholder}
                         type={inputProps.type}
-                        autoComplete={
-                          step === "email"
-                            ? "email"
-                            : step === "phone"
-                            ? "tel"
-                            : "given-name"
-                        }
+                        autoComplete={step === "email" ? "email" : step === "phone" ? "tel" : "given-name"}
                         autoCapitalize={step === "email" ? "none" : "words"}
                         className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-base outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
                         style={{ fontSize: "16px" }}
@@ -651,6 +583,73 @@ export default function AgenceChatbot() {
                         </svg>
                       </button>
                     </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ─── Schedule Picker (Google Meet) ─── */}
+              <AnimatePresence>
+                {showSchedule && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
+                  >
+                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                      {/* Day selector */}
+                      <div className="flex border-b border-gray-100">
+                        {businessDays.map((day) => {
+                          const isSelected = selectedDay?.toDateString() === day.toDateString();
+                          return (
+                            <button
+                              key={day.toISOString()}
+                              onClick={() => setSelectedDay(day)}
+                              className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${
+                                isSelected
+                                  ? "bg-[#007AFF] text-white"
+                                  : "text-gray-600 hover:bg-gray-50 active:bg-gray-100"
+                              }`}
+                            >
+                              <span className="text-[10px] font-medium uppercase">
+                                {DAY_NAMES[day.getDay()]}
+                              </span>
+                              <span className="text-sm font-bold">{day.getDate()}</span>
+                              <span className="text-[10px]">
+                                {MONTH_NAMES[day.getMonth()]}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Time slots */}
+                      <AnimatePresence mode="wait">
+                        {selectedDay ? (
+                          <motion.div
+                            key={selectedDay.toISOString()}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="p-2.5 grid grid-cols-3 gap-1.5"
+                          >
+                            {SLOTS.map((slot) => (
+                              <button
+                                key={slot}
+                                onClick={() => handleSlotSelect(slot)}
+                                className="rounded-lg border border-gray-200 py-2 text-[13px] font-medium text-gray-700 hover:border-[#007AFF] hover:text-[#007AFF] active:bg-[#007AFF] active:text-white active:border-[#007AFF] transition-colors"
+                              >
+                                {slot}
+                              </button>
+                            ))}
+                          </motion.div>
+                        ) : (
+                          <div className="p-4 text-center text-xs text-gray-400">
+                            Sélectionnez un jour ci-dessus
+                          </div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
