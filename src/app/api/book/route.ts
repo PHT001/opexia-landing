@@ -7,18 +7,11 @@ const OWNER_EMAIL = "contact@opexia-agency.com";
 
 /* ───── Google Calendar auth ───── */
 function getCalendarClient() {
-  let credentials;
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}";
-  try {
-    // Try direct JSON parse first
-    credentials = JSON.parse(raw);
-  } catch {
-    // If it fails, try base64 decode
-    credentials = JSON.parse(Buffer.from(raw, "base64").toString("utf-8"));
-  }
+  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL || "";
+  const privateKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
   const auth = new google.auth.JWT({
-    email: credentials.client_email,
-    key: credentials.private_key,
+    email: clientEmail,
+    key: privateKey,
     scopes: ["https://www.googleapis.com/auth/calendar"],
   });
   return google.calendar({ version: "v3", auth });
