@@ -20,7 +20,7 @@ interface Message {
   id: number;
   role: "bot" | "user";
   text: string;
-  bold?: string; // substring to render bold
+  bold?: string;
 }
 
 interface Choice {
@@ -42,14 +42,14 @@ const SECTORS: Choice[] = [
 const PAINS: Choice[] = [
   { label: "📞 Prospection / relance", value: "Prospection et relance clients" },
   { label: "💬 Support client / SAV", value: "Support client et SAV" },
-  { label: "📋 Gestion administrative", value: "Gestion administrative" },
+  { label: "📋 Gestion admin", value: "Gestion administrative" },
   { label: "✍️ Création de contenu", value: "Création de contenu" },
 ];
 
 const TEAMS: Choice[] = [
   { label: "Solo", value: "Solo" },
-  { label: "2-10 personnes", value: "2-10" },
-  { label: "11-50 personnes", value: "11-50" },
+  { label: "2-10", value: "2-10" },
+  { label: "11-50", value: "11-50" },
   { label: "50+", value: "50+" },
 ];
 
@@ -99,7 +99,6 @@ export default function AgenceChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [answers, setAnswers] = useState({
     sector: "",
     pain: "",
@@ -113,6 +112,18 @@ export default function AgenceChatbot() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /* Lock body scroll on mobile when chat is open */
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   /* Auto-scroll */
   useEffect(() => {
@@ -142,19 +153,6 @@ export default function AgenceChatbot() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [step, isOpen]);
-
-  /* Email domain suggestions logic */
-  useEffect(() => {
-    if (step === "email") {
-      const val = inputValue;
-      const hasAt = val.includes("@");
-      const afterAt = hasAt ? val.split("@")[1] : "";
-      // Show suggestions when user types @ but hasn't completed the domain
-      setShowSuggestions(hasAt && !afterAt.includes(".") && afterAt.length < 10);
-    } else {
-      setShowSuggestions(false);
-    }
-  }, [inputValue, step]);
 
   /* Bot message with typing simulation */
   const addBotMessage = useCallback(
@@ -205,7 +203,7 @@ export default function AgenceChatbot() {
         setAnswers((prev) => ({ ...prev, sector: choice.value }));
         setStep("pain");
         await addBotMessage(
-          "Et c'est quoi qui vous prend le plus de temps au quotidien ?",
+          "C'est quoi qui vous prend le plus de temps au quotidien ?",
           700
         );
         break;
@@ -221,7 +219,7 @@ export default function AgenceChatbot() {
         const savings = TIME_SAVINGS[answers.pain] || "10 à 20h";
         setStep("contact");
         await addBotMessage(
-          `Top ! D'après ce que vous me dites, on peut vous faire gagner ${savings} par mois. Nos clients voient les premiers résultats en 14 jours. 🚀`,
+          `Top ! On peut vous faire gagner ${savings} par mois. Résultats en 14 jours. 🚀`,
           1000,
           savings
         );
@@ -235,16 +233,14 @@ export default function AgenceChatbot() {
       case "contact":
         setAnswers((prev) => ({ ...prev, contactMethod: choice.value }));
         setStep("name");
-        await addBotMessage("Super choix ! C'est quoi votre prénom ?", 600);
+        await addBotMessage("Super ! C'est quoi votre prénom ?", 600);
         break;
     }
   };
 
   /* Apply email domain suggestion */
-  const applyEmailSuggestion = (domain: string) => {
-    const localPart = inputValue.split("@")[0];
-    setInputValue(localPart + domain);
-    setShowSuggestions(false);
+  const applyEmailSuggestion = (fullEmail: string) => {
+    setInputValue(fullEmail);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
@@ -255,7 +251,6 @@ export default function AgenceChatbot() {
     const value = inputValue.trim();
     addUserMessage(value);
     setInputValue("");
-    setShowSuggestions(false);
 
     if (step === "name") {
       setAnswers((prev) => ({ ...prev, name: value }));
@@ -263,13 +258,13 @@ export default function AgenceChatbot() {
       if (answers.contactMethod === "Google Meet") {
         setStep("email");
         await addBotMessage(
-          `Enchanté ${value} ! Votre adresse email pour recevoir l'invitation Meet ?`,
+          `Enchanté ${value} ! Votre email pour l'invitation Meet ?`,
           700
         );
       } else {
         setStep("phone");
         await addBotMessage(
-          `Enchanté ${value} ! Et votre numéro pour qu'on vous appelle ?`,
+          `Enchanté ${value} ! Votre numéro pour qu'on vous appelle ?`,
           700
         );
       }
@@ -277,11 +272,11 @@ export default function AgenceChatbot() {
       setAnswers((prev) => ({ ...prev, email: value }));
       setStep("done");
       await addBotMessage(
-        `C'est noté ${answers.name} ! 🎉 On vous envoie l'invitation Google Meet dans les 24h.`,
+        `C'est noté ${answers.name} ! 🎉 On vous envoie l'invitation Meet dans les 24h.`,
         800
       );
       await addBotMessage(
-        "Une question en attendant ? On reste disponible 👇",
+        "Une question en attendant ? On reste dispo 👇",
         600
       );
     } else if (step === "phone") {
@@ -292,7 +287,7 @@ export default function AgenceChatbot() {
         800
       );
       await addBotMessage(
-        "Une question en attendant ? On reste disponible 👇",
+        "Une question en attendant ? On reste dispo 👇",
         600
       );
     }
@@ -302,8 +297,8 @@ export default function AgenceChatbot() {
   const handleWhatsAppQuestion = () => {
     const context =
       answers.name && answers.sector
-        ? `Bonjour, c'est ${answers.name}. J'ai une question à propos de vos services d'automatisation IA.\n\nSecteur : ${answers.sector}\nBesoin : ${answers.pain}\n\n(Envoyé depuis opexia-agency.com)`
-        : `Bonjour, j'ai une question à propos de vos services d'automatisation IA.\n\n(Envoyé depuis opexia-agency.com)`;
+        ? `Bonjour, c'est ${answers.name}. J'ai une question concernant vos services d'automatisation IA.\n\nSecteur : ${answers.sector}\nBesoin : ${answers.pain}\n\n(Envoyé depuis opexia-agency.com)`
+        : `Bonjour, j'ai une question concernant vos services d'automatisation IA.\n\n(Envoyé depuis opexia-agency.com)`;
     const msg = encodeURIComponent(context);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
   };
@@ -322,7 +317,6 @@ export default function AgenceChatbot() {
       phone: "",
     });
     setInputValue("");
-    setShowSuggestions(false);
     setStarted(false);
     setTimeout(() => {
       setStarted(true);
@@ -349,24 +343,37 @@ export default function AgenceChatbot() {
   };
 
   const showOptions =
-    ["welcome", "sector", "pain", "team", "contact"].includes(step) &&
-    !isTyping;
+    ["welcome", "sector", "pain", "team", "contact"].includes(step) && !isTyping;
   const showInput =
     (step === "name" || step === "email" || step === "phone") && !isTyping;
   const showDone = step === "done" && !isTyping;
   const options = getCurrentOptions();
 
+  /* Email suggestions: show as soon as user types anything */
+  const emailLocalPart = inputValue.split("@")[0];
+  const emailHasFullDomain =
+    inputValue.includes("@") &&
+    inputValue.split("@")[1]?.includes(".");
+  const showEmailSuggestions =
+    step === "email" &&
+    emailLocalPart.length > 0 &&
+    !emailHasFullDomain;
+
+  const getEmailSuggestions = () => {
+    const local = emailLocalPart;
+    if (!local) return [];
+    const afterAt = inputValue.includes("@")
+      ? inputValue.split("@")[1]?.toLowerCase() || ""
+      : "";
+    return EMAIL_DOMAINS.filter((d) => {
+      if (!afterAt) return true;
+      return d.toLowerCase().startsWith("@" + afterAt);
+    }).map((d) => local + d);
+  };
+
   /* Progress */
   const stepOrder: Step[] = [
-    "welcome",
-    "sector",
-    "pain",
-    "team",
-    "contact",
-    "name",
-    "email",
-    "phone",
-    "done",
+    "welcome", "sector", "pain", "team", "contact", "name", "email", "phone", "done",
   ];
   const currentIndex = stepOrder.indexOf(step);
   const progress = Math.min(((currentIndex + 1) / 8) * 100, 100);
@@ -385,15 +392,6 @@ export default function AgenceChatbot() {
     }
   };
 
-  /* Email suggestion filtering */
-  const getFilteredDomains = () => {
-    if (!inputValue.includes("@")) return EMAIL_DOMAINS;
-    const afterAt = inputValue.split("@")[1]?.toLowerCase() || "";
-    return EMAIL_DOMAINS.filter((d) =>
-      d.toLowerCase().startsWith("@" + afterAt)
-    );
-  };
-
   const inputProps = getInputProps();
 
   return (
@@ -408,7 +406,7 @@ export default function AgenceChatbot() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#007AFF] text-white shadow-xl shadow-blue-900/30"
+            className="fixed bottom-5 right-5 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-[#007AFF] text-white shadow-xl shadow-blue-900/30"
           >
             <svg
               className="h-6 w-6"
@@ -431,259 +429,236 @@ export default function AgenceChatbot() {
       {/* ─── Chat Window ─── */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="fixed inset-0 z-50 flex flex-col bg-white
-                       sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[400px] sm:h-auto sm:max-h-[min(660px,calc(100dvh-48px))] sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl"
-          >
-            {/* Header */}
-            <div className="bg-[#0A0A0A] px-4 py-3.5 sm:px-5 sm:py-4 flex items-center justify-between sm:rounded-t-2xl flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden flex-shrink-0">
-                    <Image
-                      src="/images/logobleu.png"
-                      alt="OpexIA"
-                      width={40}
-                      height={40}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full border-2 border-[#0A0A0A] bg-green-400" />
-                </div>
-                <div>
-                  <p className="text-white text-sm font-semibold">OpexIA</p>
-                  <p className="text-white/40 text-xs flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
-                    Répond en quelques secondes
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="h-8 w-8 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+          <>
+            {/* Mobile backdrop - covers everything */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9998] bg-white sm:hidden"
+            />
 
-            {/* Progress Bar */}
-            <div className="h-1 bg-gray-100 flex-shrink-0">
-              <motion.div
-                className="h-full bg-[#007AFF]"
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              />
-            </div>
-
-            {/* Messages Area */}
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 space-y-2.5 sm:space-y-3"
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              style={{
+                paddingTop: "env(safe-area-inset-top)",
+                paddingBottom: "env(safe-area-inset-bottom)",
+              }}
+              className="fixed inset-0 z-[9999] flex flex-col bg-white
+                         sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[min(660px,calc(100dvh-48px))] sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl"
             >
-              {messages.map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className={`flex ${
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+              {/* Header */}
+              <div className="bg-[#0A0A0A] px-4 py-3 flex items-center justify-between sm:rounded-t-2xl flex-shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative flex-shrink-0">
+                    <div className="h-9 w-9 rounded-full overflow-hidden">
+                      <Image
+                        src="/images/logobleu.png"
+                        alt="OpexIA"
+                        width={36}
+                        height={36}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0A0A0A] bg-green-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-semibold">OpexIA</p>
+                    <p className="text-white/40 text-xs flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block flex-shrink-0" />
+                      En ligne
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
                 >
-                  <div
-                    className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3.5 py-2.5 sm:px-4 text-[13px] sm:text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-[#007AFF] text-white rounded-br-md"
-                        : "bg-gray-100 text-gray-800 rounded-bl-md"
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="h-1 bg-gray-100 flex-shrink-0">
+                <motion.div
+                  className="h-full bg-[#007AFF]"
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+              </div>
+
+              {/* Messages Area */}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 space-y-2.5"
+              >
+                {messages.map((msg) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={`flex ${
+                      msg.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <RenderText text={msg.text} bold={msg.bold} />
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Typing dots */}
-              {isTyping && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-start"
-                >
-                  <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1.5">
-                    <span
-                      className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <span
-                      className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <span
-                      className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
-                  </div>
-                </motion.div>
-              )}
-
-              <div />
-            </div>
-
-            {/* ─── Options Buttons ─── */}
-            <AnimatePresence>
-              {showOptions && options.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
-                >
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {options.map((opt, i) => (
-                      <motion.button
-                        key={opt.value}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: i * 0.05 }}
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        onClick={() => handleChoice(opt)}
-                        className="rounded-full border border-[#007AFF]/25 bg-[#007AFF]/5 px-3.5 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-medium text-[#007AFF] hover:bg-[#007AFF] hover:text-white active:bg-[#007AFF] active:text-white transition-colors duration-200"
-                      >
-                        {opt.label}
-                      </motion.button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* ─── Text Input (name / email / phone) ─── */}
-            <AnimatePresence>
-              {showInput && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
-                >
-                  {/* Email domain suggestions */}
-                  <AnimatePresence>
-                    {showSuggestions && getFilteredDomains().length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="flex flex-wrap gap-1.5 mb-2"
-                      >
-                        {getFilteredDomains().map((domain) => (
-                          <button
-                            key={domain}
-                            onClick={() => applyEmailSuggestion(domain)}
-                            className="rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-600 hover:bg-[#007AFF]/10 hover:text-[#007AFF] active:bg-[#007AFF]/10 active:text-[#007AFF] transition-colors"
-                          >
-                            {inputValue.split("@")[0]}
-                            <span className="font-medium">{domain}</span>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <form
-                    onSubmit={handleSubmit}
-                    className="flex gap-2"
-                  >
-                    <input
-                      ref={inputRef}
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      placeholder={inputProps.placeholder}
-                      type={inputProps.type}
-                      autoComplete={
-                        step === "email"
-                          ? "email"
-                          : step === "phone"
-                          ? "tel"
-                          : "given-name"
-                      }
-                      className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!inputValue.trim()}
-                      className="h-10 w-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center hover:bg-[#0055D4] transition-colors disabled:opacity-30 flex-shrink-0"
+                    <div
+                      className={`rounded-2xl px-3.5 py-2.5 text-[13px] sm:text-sm leading-relaxed break-words ${
+                        msg.role === "user"
+                          ? "bg-[#007AFF] text-white rounded-br-md max-w-[75%]"
+                          : "bg-gray-100 text-gray-800 rounded-bl-md max-w-[85%]"
+                      }`}
                     >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
+                      <RenderText text={msg.text} bold={msg.bold} />
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Typing dots */}
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </motion.div>
+                )}
+
+                <div />
+              </div>
+
+              {/* ─── Options Buttons ─── */}
+              <AnimatePresence>
+                {showOptions && options.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
+                  >
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {options.map((opt, i) => (
+                        <motion.button
+                          key={opt.value}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleChoice(opt)}
+                          className="rounded-full border border-[#007AFF]/25 bg-[#007AFF]/5 px-3 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-medium text-[#007AFF] active:bg-[#007AFF] active:text-white transition-colors duration-150"
+                        >
+                          {opt.label}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ─── Text Input (name / email / phone) ─── */}
+              <AnimatePresence>
+                {showInput && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
+                  >
+                    {/* Email suggestions - show as soon as user types */}
+                    <AnimatePresence>
+                      {showEmailSuggestions && getEmailSuggestions().length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 4 }}
+                          className="flex flex-wrap gap-1.5 mb-2 overflow-x-auto"
+                        >
+                          {getEmailSuggestions().map((email) => (
+                            <button
+                              key={email}
+                              type="button"
+                              onClick={() => applyEmailSuggestion(email)}
+                              className="rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-700 active:bg-[#007AFF]/15 active:text-[#007AFF] transition-colors whitespace-nowrap flex-shrink-0"
+                            >
+                              {email}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <form onSubmit={handleSubmit} className="flex gap-2">
+                      <input
+                        ref={inputRef}
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder={inputProps.placeholder}
+                        type={inputProps.type}
+                        autoComplete={
+                          step === "email"
+                            ? "email"
+                            : step === "phone"
+                            ? "tel"
+                            : "given-name"
+                        }
+                        autoCapitalize={step === "email" ? "none" : "words"}
+                        className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!inputValue.trim()}
+                        className="h-10 w-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 12h14M12 5l7 7-7 7"
-                        />
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ─── Done: Question WhatsApp + Reset ─── */}
+              <AnimatePresence>
+                {showDone && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-2 flex-shrink-0"
+                  >
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleWhatsAppQuestion}
+                      className="w-full rounded-full py-3 text-[13px] sm:text-sm font-semibold text-white flex items-center justify-center gap-2 shadow-lg"
+                      style={{ backgroundColor: "#25D366" }}
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.553 4.116 1.518 5.855L.057 23.764l6.087-1.421A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.796 9.796 0 01-5.222-1.505l-.375-.222-3.61.843.91-3.502-.253-.392A9.796 9.796 0 012.18 12c0-5.422 4.398-9.82 9.82-9.82 5.422 0 9.82 4.398 9.82 9.82 0 5.422-4.398 9.82-9.82 9.82z" />
                       </svg>
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* ─── Done: Question WhatsApp + Reset ─── */}
-            <AnimatePresence>
-              {showDone && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-2 flex-shrink-0"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleWhatsAppQuestion}
-                    className="w-full rounded-full py-3 sm:py-3.5 text-[13px] sm:text-sm font-semibold text-white flex items-center justify-center gap-2 shadow-lg"
-                    style={{ backgroundColor: "#25D366" }}
-                  >
-                    <svg
-                      className="h-4 w-4 sm:h-5 sm:w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
+                      Poser une question sur WhatsApp
+                    </motion.button>
+                    <button
+                      onClick={handleReset}
+                      className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors"
                     >
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.553 4.116 1.518 5.855L.057 23.764l6.087-1.421A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.796 9.796 0 01-5.222-1.505l-.375-.222-3.61.843.91-3.502-.253-.392A9.796 9.796 0 012.18 12c0-5.422 4.398-9.82 9.82-9.82 5.422 0 9.82 4.398 9.82 9.82 0 5.422-4.398 9.82-9.82 9.82z" />
-                    </svg>
-                    Poser une question sur WhatsApp
-                  </motion.button>
-                  <button
-                    onClick={handleReset}
-                    className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors"
-                  >
-                    Recommencer
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                      Recommencer
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
