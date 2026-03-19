@@ -34,6 +34,10 @@ export const metadata: Metadata = {
     "intelligence artificielle",
     "site web IA",
   ],
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: "OpexIA \u2014 Agence IA | Sites, Chatbots & Automatisations",
     description: "Agence IA sp\u00e9cialis\u00e9e : sites web, chatbots, automatisations et agents IA pour booster votre entreprise.",

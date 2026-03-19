@@ -10,8 +10,8 @@ type Step =
   | "contact"
   | "name"
   | "email"
-  | "schedule"
   | "phone"
+  | "schedule"
   | "done";
 
 interface Message {
@@ -42,10 +42,9 @@ const SECTORS: Choice[] = [
 ];
 
 const CONTACTS: Choice[] = [
-  { label: "📞 Appel WhatsApp · 15 min", value: "Appel WhatsApp" },
+  { label: "📞 Appel téléphonique", value: "Appel téléphonique" },
   { label: "💻 Google Meet", value: "Google Meet" },
 ];
-
 
 const EMAIL_DOMAINS = [
   "@gmail.com",
@@ -55,9 +54,11 @@ const EMAIL_DOMAINS = [
   "@icloud.com",
 ];
 
-const SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+const SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
 const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 const MONTH_NAMES = ["jan", "fév", "mar", "avr", "mai", "jun", "jul", "aoû", "sep", "oct", "nov", "déc"];
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /* Monday–Saturday (1–6), skip Sunday */
 function getNextAvailableDays(count: number): Date[] {
@@ -65,7 +66,7 @@ function getNextAvailableDays(count: number): Date[] {
   const d = new Date();
   d.setDate(d.getDate() + 1); // start tomorrow
   while (days.length < count) {
-    if (d.getDay() !== 0) { // skip Sunday only
+    if (d.getDay() !== 0) {
       days.push(new Date(d));
     }
     d.setDate(d.getDate() + 1);
@@ -99,6 +100,7 @@ export default function AgenceChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [emailError, setEmailError] = useState(false);
   const [answers, setAnswers] = useState({
     sector: "",
     contactMethod: "",
@@ -165,7 +167,7 @@ export default function AgenceChatbot() {
     return () => window.removeEventListener("openLeadBot", handler);
   }, []);
 
-  /* Start conversation on first open — go straight to first question */
+  /* Start conversation on first open */
   useEffect(() => {
     if (isOpen && !started) {
       setStarted(true);
@@ -239,6 +241,7 @@ export default function AgenceChatbot() {
   /* Apply email domain suggestion */
   const applyEmailSuggestion = (fullEmail: string) => {
     setInputValue(fullEmail);
+    setEmailError(false);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
@@ -289,15 +292,15 @@ export default function AgenceChatbot() {
       setBookedSlots((prev) => new Set(prev).add(slotKey));
       setStep("done");
 
-      const isGoogleMeet = answers.contactMethod === "Google Meet";
-      if (isGoogleMeet) {
+      const isCall = answers.contactMethod === "Appel téléphonique";
+      if (isCall) {
         await addBotMessage(
-          `Parfait ${answers.name} ! 🎉 RDV confirmé le ${scheduleText}. Un email de confirmation arrive sur ${answers.email}.`,
+          `Parfait ${answers.name} ! 🎉 On vous appelle le ${scheduleText}. Confirmation envoyée sur ${answers.email} !`,
           800
         );
       } else {
         await addBotMessage(
-          `Parfait ${answers.name} ! 🎉 On vous appelle le ${scheduleText}. Confirmation envoyée !`,
+          `Parfait ${answers.name} ! 🎉 RDV confirmé le ${scheduleText}. Un email de confirmation arrive sur ${answers.email}.`,
           800
         );
       }
@@ -313,37 +316,29 @@ export default function AgenceChatbot() {
     e?.preventDefault();
     if (!inputValue.trim()) return;
     const value = inputValue.trim();
+
+    // Email validation
+    if (step === "email" && !EMAIL_REGEX.test(value)) {
+      setEmailError(true);
+      return;
+    }
+
+    setEmailError(false);
     addUserMessage(value);
     setInputValue("");
 
     if (step === "name") {
       setAnswers((prev) => ({ ...prev, name: value }));
-
-      if (answers.contactMethod === "Google Meet") {
-        setStep("email");
-        await addBotMessage(
-          `Enchanté ${value} ! Votre email pour l'invitation Meet ?`,
-          700
-        );
-      } else {
-        setStep("phone");
-        await addBotMessage(
-          `Enchanté ${value} ! Votre numéro pour qu'on vous appelle ?`,
-          700
-        );
-      }
+      setStep("email");
+      await addBotMessage(`Enchanté ${value} ! Votre email ?`, 700);
     } else if (step === "email") {
       setAnswers((prev) => ({ ...prev, email: value }));
-      setStep("schedule");
-      await addBotMessage("Top ! Choisissez un créneau qui vous arrange 👇", 700);
+      setStep("phone");
+      await addBotMessage("Votre numéro de téléphone ?", 600);
     } else if (step === "phone") {
       setAnswers((prev) => ({ ...prev, phone: value }));
-      setStep("done");
-      await addBotMessage(
-        `C'est noté ${answers.name} ! 🎉 On vous appelle sur WhatsApp dans les 24h.`,
-        800
-      );
-      await addBotMessage("Une question en attendant ? On reste dispo 👇", 600);
+      setStep("schedule");
+      await addBotMessage("Top ! Choisissez un créneau qui vous arrange 👇", 700);
     }
   };
 
@@ -362,6 +357,7 @@ export default function AgenceChatbot() {
     setStep("sector");
     setAnswers({ sector: "", contactMethod: "", name: "", email: "", phone: "", schedule: "" });
     setInputValue("");
+    setEmailError(false);
     setSelectedDay(null);
     setStarted(false);
     setTimeout(() => {
@@ -402,9 +398,9 @@ export default function AgenceChatbot() {
 
   /* Progress */
   const stepMap: Record<Step, number> = {
-    sector: 1, contact: 2, name: 3, email: 4, schedule: 5, phone: 4, done: 5,
+    sector: 1, contact: 2, name: 3, email: 4, phone: 5, schedule: 6, done: 7,
   };
-  const progress = Math.min((stepMap[step] / 5) * 100, 100);
+  const progress = Math.min((stepMap[step] / 7) * 100, 100);
 
   /* Input placeholder & type */
   const getInputProps = () => {
@@ -592,16 +588,27 @@ export default function AgenceChatbot() {
                       )}
                     </AnimatePresence>
 
+                    {emailError && (
+                      <p className="text-red-500 text-xs mb-2 px-1">Veuillez entrer un email valide</p>
+                    )}
+
                     <form onSubmit={handleSubmit} className="flex gap-2">
                       <input
                         ref={inputRef}
                         value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
+                        onChange={(e) => {
+                          setInputValue(e.target.value);
+                          if (emailError) setEmailError(false);
+                        }}
                         placeholder={inputProps.placeholder}
                         type={inputProps.type}
                         autoComplete={step === "email" ? "email" : step === "phone" ? "tel" : "given-name"}
-                        autoCapitalize={step === "email" ? "none" : "words"}
-                        className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-base outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
+                        autoCapitalize={step === "email" ? "none" : step === "phone" ? "none" : "words"}
+                        className={`flex-1 min-w-0 rounded-full border px-4 py-2.5 text-base outline-none transition-all ${
+                          emailError
+                            ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+                            : "border-gray-200 focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10"
+                        }`}
                         style={{ fontSize: "16px" }}
                       />
                       <button
@@ -618,7 +625,7 @@ export default function AgenceChatbot() {
                 )}
               </AnimatePresence>
 
-              {/* ─── Schedule Picker (Google Meet) ─── */}
+              {/* ─── Schedule Picker ─── */}
               <AnimatePresence>
                 {showSchedule && (
                   <motion.div
@@ -662,7 +669,7 @@ export default function AgenceChatbot() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="p-2.5 grid grid-cols-5 gap-1.5"
+                            className="p-2.5 grid grid-cols-3 gap-1.5"
                           >
                             {SLOTS.map((slot) => {
                               const y = selectedDay.getFullYear();
