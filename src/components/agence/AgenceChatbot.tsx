@@ -65,16 +65,17 @@ const EMAIL_DOMAINS = [
   "@icloud.com",
 ];
 
-const SLOTS = ["10:00", "11:00", "14:00", "15:30", "17:00"];
+const SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
 const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 const MONTH_NAMES = ["jan", "fév", "mar", "avr", "mai", "jun", "jul", "aoû", "sep", "oct", "nov", "déc"];
 
-function getNextBusinessDays(count: number): Date[] {
+/* Monday–Saturday (1–6), skip Sunday */
+function getNextAvailableDays(count: number): Date[] {
   const days: Date[] = [];
   const d = new Date();
   d.setDate(d.getDate() + 1); // start tomorrow
   while (days.length < count) {
-    if (d.getDay() !== 0 && d.getDay() !== 6) {
+    if (d.getDay() !== 0) { // skip Sunday only
       days.push(new Date(d));
     }
     d.setDate(d.getDate() + 1);
@@ -119,10 +120,12 @@ export default function AgenceChatbot() {
   });
   const [started, setStarted] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const businessDays = useRef(getNextBusinessDays(5)).current;
+  const availableDays = useRef(getNextAvailableDays(7)).current;
 
   /* Lock body scroll on mobile when chat is open */
   useEffect(() => {
@@ -261,19 +264,70 @@ export default function AgenceChatbot() {
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
+  /* Fetch booked slots when entering schedule step */
+  useEffect(() => {
+    if (step === "schedule") {
+      fetch("/api/book")
+        .then((r) => r.json())
+        .then((data) => setBookedSlots(new Set(data.booked)))
+        .catch(() => {});
+    }
+  }, [step]);
+
   /* Handle schedule slot selection */
   const handleSlotSelect = async (slot: string) => {
-    if (!selectedDay) return;
+    if (!selectedDay || bookingLoading) return;
     const dayLabel = `${DAY_NAMES[selectedDay.getDay()]} ${selectedDay.getDate()} ${MONTH_NAMES[selectedDay.getMonth()]}`;
     const scheduleText = `${dayLabel} à ${slot}`;
-    setAnswers((prev) => ({ ...prev, schedule: scheduleText }));
+    const y = selectedDay.getFullYear();
+    const m = String(selectedDay.getMonth() + 1).padStart(2, "0");
+    const d = String(selectedDay.getDate()).padStart(2, "0");
+    const slotKey = `${y}-${m}-${d}T${slot}`;
+
+    if (bookedSlots.has(slotKey)) return;
+
+    setBookingLoading(true);
     addUserMessage(`📅 ${scheduleText}`);
-    setStep("done");
-    await addBotMessage(
-      `Parfait ${answers.name} ! 🎉 RDV Google Meet le ${scheduleText}. L'invitation arrive sur ${answers.email}.`,
-      800
-    );
-    await addBotMessage("Une question en attendant ? On reste dispo 👇", 600);
+
+    try {
+      const res = await fetch("/api/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...answers,
+          schedule: scheduleText,
+          slotKey,
+        }),
+      });
+
+      if (res.status === 409) {
+        setBookedSlots((prev) => new Set(prev).add(slotKey));
+        await addBotMessage("Ce créneau vient d'être pris 😅 Choisissez-en un autre !", 600);
+        setBookingLoading(false);
+        return;
+      }
+
+      setAnswers((prev) => ({ ...prev, schedule: scheduleText }));
+      setBookedSlots((prev) => new Set(prev).add(slotKey));
+      setStep("done");
+
+      const isGoogleMeet = answers.contactMethod === "Google Meet";
+      if (isGoogleMeet) {
+        await addBotMessage(
+          `Parfait ${answers.name} ! 🎉 RDV confirmé le ${scheduleText}. Un email de confirmation arrive sur ${answers.email}.`,
+          800
+        );
+      } else {
+        await addBotMessage(
+          `Parfait ${answers.name} ! 🎉 On vous appelle le ${scheduleText}. Confirmation envoyée !`,
+          800
+        );
+      }
+      await addBotMessage("Une question en attendant ? On reste dispo 👇", 600);
+    } catch {
+      await addBotMessage("Oups, une erreur est survenue. Réessayez !", 600);
+    }
+    setBookingLoading(false);
   };
 
   /* Handle text input (name / email / phone) */
@@ -598,8 +652,8 @@ export default function AgenceChatbot() {
                   >
                     <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
                       {/* Day selector */}
-                      <div className="flex border-b border-gray-100">
-                        {businessDays.map((day) => {
+                      <div className="flex overflow-x-auto border-b border-gray-100">
+                        {availableDays.map((day) => {
                           const isSelected = selectedDay?.toDateString() === day.toDateString();
                           return (
                             <button
@@ -631,17 +685,29 @@ export default function AgenceChatbot() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="p-2.5 grid grid-cols-3 gap-1.5"
+                            className="p-2.5 grid grid-cols-5 gap-1.5"
                           >
-                            {SLOTS.map((slot) => (
-                              <button
-                                key={slot}
-                                onClick={() => handleSlotSelect(slot)}
-                                className="rounded-lg border border-gray-200 py-2 text-[13px] font-medium text-gray-700 hover:border-[#007AFF] hover:text-[#007AFF] active:bg-[#007AFF] active:text-white active:border-[#007AFF] transition-colors"
-                              >
-                                {slot}
-                              </button>
-                            ))}
+                            {SLOTS.map((slot) => {
+                              const y = selectedDay.getFullYear();
+                              const m = String(selectedDay.getMonth() + 1).padStart(2, "0");
+                              const d = String(selectedDay.getDate()).padStart(2, "0");
+                              const key = `${y}-${m}-${d}T${slot}`;
+                              const isBooked = bookedSlots.has(key);
+                              return (
+                                <button
+                                  key={slot}
+                                  onClick={() => !isBooked && handleSlotSelect(slot)}
+                                  disabled={isBooked || bookingLoading}
+                                  className={`rounded-lg border py-2 text-[13px] font-medium transition-colors ${
+                                    isBooked
+                                      ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through"
+                                      : "border-gray-200 text-gray-700 hover:border-[#007AFF] hover:text-[#007AFF] active:bg-[#007AFF] active:text-white active:border-[#007AFF]"
+                                  }`}
+                                >
+                                  {isBooked ? `${slot} ✕` : slot}
+                                </button>
+                              );
+                            })}
                           </motion.div>
                         ) : (
                           <div className="p-4 text-center text-xs text-gray-400">
