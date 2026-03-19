@@ -209,8 +209,8 @@ export default function AgenceChatbot() {
 
   /* Start straight with first question */
   const startConversation = async () => {
-    await addBotMessage("Salut ! 👋 Réservez votre audit gratuit en 30 secondes.", 500, "30 secondes");
-    await addBotMessage("Vous êtes dans quel secteur ?", 700);
+    await addBotMessage("Bonjour 👋 Prenez rendez-vous en 30 secondes.", 500, "30 secondes");
+    await addBotMessage("Dans quel secteur exercez-vous ?", 700);
     setStep("sector");
   };
 
@@ -223,17 +223,17 @@ export default function AgenceChatbot() {
         setAnswers((prev) => ({ ...prev, sector: choice.value }));
         setStep("contact");
         await addBotMessage(
-          "Top ! On peut automatiser une bonne partie de vos tâches. Résultats en 14 jours. 🚀",
+          "Parfait. Nous pouvons automatiser une grande partie de vos processus, avec des résultats visibles sous 14 jours.",
           800,
           "14 jours"
         );
-        await addBotMessage("Comment on en discute ?", 600);
+        await addBotMessage("Comment souhaitez-vous échanger ?", 600);
         break;
 
       case "contact":
         setAnswers((prev) => ({ ...prev, contactMethod: choice.value }));
         setStep("name");
-        await addBotMessage("C'est quoi votre prénom ?", 600);
+        await addBotMessage("Quel est votre prénom ?", 600);
         break;
     }
   };
@@ -283,7 +283,7 @@ export default function AgenceChatbot() {
 
       if (res.status === 409) {
         setBookedSlots((prev) => new Set(prev).add(slotKey));
-        await addBotMessage("Ce créneau vient d'être pris 😅 Choisissez-en un autre !", 600);
+        await addBotMessage("Ce créneau vient d'être réservé. Veuillez en sélectionner un autre.", 600);
         setBookingLoading(false);
         return;
       }
@@ -295,18 +295,18 @@ export default function AgenceChatbot() {
       const isCall = answers.contactMethod === "Appel téléphonique";
       if (isCall) {
         await addBotMessage(
-          `Parfait ${answers.name} ! 🎉 On vous appelle le ${scheduleText}. Confirmation envoyée sur ${answers.email} !`,
+          `Votre rendez-vous est confirmé, ${answers.name}. Nous vous appellerons le ${scheduleText}. Une confirmation a été envoyée à ${answers.email}.`,
           800
         );
       } else {
         await addBotMessage(
-          `Parfait ${answers.name} ! 🎉 RDV confirmé le ${scheduleText}. Un email de confirmation arrive sur ${answers.email}.`,
+          `Votre rendez-vous est confirmé, ${answers.name}. Rendez-vous le ${scheduleText} sur Google Meet. Une confirmation a été envoyée à ${answers.email}.`,
           800
         );
       }
-      await addBotMessage("Une question en attendant ? On reste dispo 👇", 600);
+      await addBotMessage("Si vous avez des questions d'ici là, n'hésitez pas à nous contacter.", 600);
     } catch {
-      await addBotMessage("Oups, une erreur est survenue. Réessayez !", 600);
+      await addBotMessage("Une erreur est survenue. Veuillez réessayer.", 600);
     }
     setBookingLoading(false);
   };
@@ -330,23 +330,23 @@ export default function AgenceChatbot() {
     if (step === "name") {
       setAnswers((prev) => ({ ...prev, name: value }));
       setStep("email");
-      await addBotMessage(`Enchanté ${value} ! Votre email ?`, 700);
+      await addBotMessage(`Enchanté ${value}. Quelle est votre adresse email ?`, 700);
     } else if (step === "email") {
       setAnswers((prev) => ({ ...prev, email: value }));
       setStep("phone");
-      await addBotMessage("Votre numéro de téléphone ?", 600);
+      await addBotMessage("Merci. Quel est votre numéro de téléphone ?", 600);
     } else if (step === "phone") {
       setAnswers((prev) => ({ ...prev, phone: value }));
       setStep("schedule");
-      await addBotMessage("Top ! Choisissez un créneau qui vous arrange 👇", 700);
+      await addBotMessage("Merci. Choisissez le créneau qui vous convient le mieux.", 700);
     }
   };
 
   /* WhatsApp question link */
   const handleWhatsAppQuestion = () => {
     const context = answers.name
-      ? `Bonjour, c'est ${answers.name}. J'ai une question concernant vos services d'automatisation IA.`
-      : `Bonjour, j'ai une question concernant vos services d'automatisation IA.`;
+      ? `Bonjour, je suis ${answers.name}. Je souhaiterais poser une question concernant vos services d'automatisation IA.`
+      : `Bonjour, je souhaiterais poser une question concernant vos services d'automatisation IA.`;
     const msg = encodeURIComponent(context);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
   };
