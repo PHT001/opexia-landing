@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const OWNER_EMAIL = "contact@opexia-agence.com";
+const OWNER_EMAIL = "contact@opexia-agency.com";
 
 /* In-memory store for booked slots (resets on cold start).
    Format: "2026-03-20T14:00" */
