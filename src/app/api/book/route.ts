@@ -1,12 +1,94 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { google } from "googleapis";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const OWNER_EMAIL = "contact@opexia-agency.com";
 
-/* In-memory store for booked slots (resets on cold start).
-   Format: "2026-03-20T14:00" */
-const bookedSlots = new Set<string>();
+/* ───── Google Calendar auth ───── */
+function getCalendarClient() {
+  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}");
+  const auth = new google.auth.JWT({
+    email: credentials.client_email,
+    key: credentials.private_key,
+    scopes: ["https://www.googleapis.com/auth/calendar"],
+  });
+  return google.calendar({ version: "v3", auth });
+}
+
+/* ───── Fetch booked slots from Google Calendar ───── */
+async function getBookedSlotsFromCalendar(): Promise<string[]> {
+  try {
+    const calendar = getCalendarClient();
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+
+    const now = new Date();
+    const inSevenDays = new Date();
+    inSevenDays.setDate(now.getDate() + 8);
+
+    const res = await calendar.events.list({
+      calendarId,
+      timeMin: now.toISOString(),
+      timeMax: inSevenDays.toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      q: "Audit OpexIA",
+    });
+
+    const slots: string[] = [];
+    for (const event of res.data.items || []) {
+      if (event.start?.dateTime) {
+        // Convert to "YYYY-MM-DDThh:mm" format in Europe/Paris
+        const dt = new Date(event.start.dateTime);
+        const parisTime = dt.toLocaleString("sv-SE", { timeZone: "Europe/Paris" });
+        // "sv-SE" gives "YYYY-MM-DD HH:MM:SS"
+        const slotKey = parisTime.slice(0, 16).replace(" ", "T");
+        slots.push(slotKey);
+      }
+    }
+    return slots;
+  } catch (err) {
+    console.error("Failed to fetch calendar events:", err);
+    return [];
+  }
+}
+
+/* ───── Create Google Calendar event ───── */
+async function createCalendarEvent({
+  name,
+  email,
+  sector,
+  pain,
+  slotKey,
+  contactMethod,
+}: {
+  name: string;
+  email: string;
+  sector: string;
+  pain: string;
+  slotKey: string;
+  contactMethod: string;
+}) {
+  const calendar = getCalendarClient();
+  const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+
+  const startDateTime = `${slotKey}:00`;
+  const [date, time] = slotKey.split("T");
+  const [hour, minute] = time.split(":");
+  const endHour = parseInt(hour, 10) + 1;
+  const endDateTime = `${date}T${String(endHour).padStart(2, "0")}:${minute}:00`;
+
+  await calendar.events.insert({
+    calendarId,
+    requestBody: {
+      summary: `Audit OpexIA — ${name}`,
+      description: `Prospect: ${name}\nEmail: ${email || "—"}\nSecteur: ${sector}\nBesoin: ${pain}\nMode: ${contactMethod}`,
+      start: { dateTime: startDateTime, timeZone: "Europe/Paris" },
+      end: { dateTime: endDateTime, timeZone: "Europe/Paris" },
+      reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 15 }] },
+    },
+  });
+}
 
 /* ───── Generate .ics calendar invite ───── */
 function generateICS({
@@ -24,7 +106,6 @@ function generateICS({
   slotKey: string;
   meetLink: string;
 }): string {
-  // slotKey format: "2026-03-20T14:00"
   const [date, time] = slotKey.split("T");
   const [year, month, day] = date.split("-");
   const [hour, minute] = time.split(":");
@@ -66,12 +147,13 @@ function generateICS({
     .join("\r\n");
 }
 
-/* ───── GET: return booked slots ───── */
+/* ───── GET: return booked slots from Google Calendar ───── */
 export async function GET() {
-  return NextResponse.json({ booked: Array.from(bookedSlots) });
+  const booked = await getBookedSlotsFromCalendar();
+  return NextResponse.json({ booked });
 }
 
-/* ───── POST: book a slot + send emails ───── */
+/* ───── POST: book a slot + send emails + add to Google Calendar ───── */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -81,13 +163,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Check if slot is already taken
-    if (bookedSlots.has(slotKey)) {
+    // Check if slot is already taken (from Google Calendar)
+    const bookedSlots = await getBookedSlotsFromCalendar();
+    if (bookedSlots.includes(slotKey)) {
       return NextResponse.json({ error: "Créneau déjà pris" }, { status: 409 });
     }
-
-    // Book the slot
-    bookedSlots.add(slotKey);
 
     const isGoogleMeet = contactMethod === "Google Meet";
     const meetLink = process.env.GOOGLE_MEET_LINK || "";
@@ -95,6 +175,9 @@ export async function POST(req: Request) {
     // Generate .ics calendar invite
     const icsContent = generateICS({ name, email: email || "", sector, pain, slotKey, meetLink });
     const icsBase64 = Buffer.from(icsContent).toString("base64");
+
+    // Add event to Google Calendar automatically
+    await createCalendarEvent({ name, email: email || "", sector, pain, slotKey, contactMethod });
 
     // Email to prospect
     if (email) {
@@ -151,7 +234,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Email notification to you (with .ics so it appears in Outlook calendar)
+    // Email notification to owner (with .ics for Outlook)
     await resend.emails.send({
       from: `OpexIA Bot <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
       to: OWNER_EMAIL,
