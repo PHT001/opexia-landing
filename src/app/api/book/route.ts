@@ -8,7 +8,11 @@ const OWNER_EMAIL = "contact@opexia-agency.com";
 /* ───── Google Calendar auth ───── */
 function getCalendarClient() {
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL || "";
-  const privateKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+  const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
+  // Key is base64 encoded to avoid newline issues on Vercel
+  const privateKey = rawKey.startsWith("LS0t")
+    ? Buffer.from(rawKey, "base64").toString("utf-8")
+    : rawKey.replace(/\\n/g, "\n");
   const auth = new google.auth.JWT({
     email: clientEmail,
     key: privateKey,
