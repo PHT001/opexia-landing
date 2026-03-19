@@ -19,7 +19,7 @@ export default function AgenceCalendly() {
 
         <div className="text-center">
           <a
-            href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
+            href="https://wa.me/message/DUQV2FBF3TF2H1"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-3 rounded-full bg-[#25D366] px-10 py-5 text-lg font-bold text-white transition-all hover:bg-[#1da851] hover:shadow-2xl hover:shadow-green-900/30"

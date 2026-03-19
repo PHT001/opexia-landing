@@ -241,7 +241,7 @@ export default function BeforeAfter() {
           className="text-center mt-12"
         >
           <a
-            href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
+            href="https://wa.me/message/DUQV2FBF3TF2H1"
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             R&eacute;server mon audit gratuit

@@ -132,7 +132,7 @@ export default function AgenceHero() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
             >
               <a
-                href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
+                href="https://wa.me/message/DUQV2FBF3TF2H1"
                 className="group inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
               >
                 Obtenir mon audit offert

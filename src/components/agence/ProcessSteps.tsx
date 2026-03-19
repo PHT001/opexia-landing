@@ -103,7 +103,7 @@ export default function ProcessSteps() {
             <LazyVideo src="/images/floatting.mp4" className="w-full h-auto" />
           </div>
           <a
-            href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
+            href="https://wa.me/message/DUQV2FBF3TF2H1"
             className="relative z-10 inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
           >
             {"Lancer mon audit gratuit"}

@@ -203,7 +203,7 @@ export default function AgenceTestimonials() {
         {/* CTA */}
         <div className="text-center mt-16">
           <a
-            href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
+            href="https://wa.me/message/DUQV2FBF3TF2H1"
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-200"
           >
             Demandez votre audit offert

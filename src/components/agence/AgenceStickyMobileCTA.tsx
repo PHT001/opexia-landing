@@ -23,7 +23,7 @@ export default function AgenceStickyMobileCTA() {
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:hidden"
         >
           <motion.a
-            href="https://wa.me/33758803717?text=Bonjour%20!%20Je%20suis%20int%C3%A9ress%C3%A9%20par%20un%20audit%20IA%20gratuit."
+            href="https://wa.me/message/DUQV2FBF3TF2H1"
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             className="inline-flex items-center rounded-full bg-[#007AFF] px-6 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(0,122,255,0.5),0_0_40px_rgba(0,122,255,0.25)]"
