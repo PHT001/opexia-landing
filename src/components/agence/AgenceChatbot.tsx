@@ -215,7 +215,7 @@ export default function AgenceChatbot() {
 
   /* Start straight with first question */
   const startConversation = async () => {
-    await addBotMessage("Salut ! 👋 En 30 secondes on va voir comment vous aider.", 500, "30 secondes");
+    await addBotMessage("Salut ! 👋 Réservez votre audit gratuit en 30 secondes.", 500, "30 secondes");
     await addBotMessage("Vous êtes dans quel secteur ?", 700);
     setStep("sector");
   };
