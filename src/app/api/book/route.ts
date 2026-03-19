@@ -58,14 +58,12 @@ async function createCalendarEvent({
   name,
   email,
   sector,
-  pain,
   slotKey,
   contactMethod,
 }: {
   name: string;
   email: string;
   sector: string;
-  pain: string;
   slotKey: string;
   contactMethod: string;
 }) {
@@ -82,7 +80,7 @@ async function createCalendarEvent({
     calendarId,
     requestBody: {
       summary: `Audit OpexIA — ${name}`,
-      description: `Prospect: ${name}\nEmail: ${email || "—"}\nSecteur: ${sector}\nBesoin: ${pain}\nMode: ${contactMethod}`,
+      description: `Prospect: ${name}\nEmail: ${email || "—"}\nSecteur: ${sector}\nMode: ${contactMethod}`,
       start: { dateTime: startDateTime, timeZone: "Europe/Paris" },
       end: { dateTime: endDateTime, timeZone: "Europe/Paris" },
       reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 15 }] },
@@ -95,14 +93,12 @@ function generateICS({
   name,
   email,
   sector,
-  pain,
   slotKey,
   meetLink,
 }: {
   name: string;
   email: string;
   sector: string;
-  pain: string;
   slotKey: string;
   meetLink: string;
 }): string {
@@ -130,7 +126,7 @@ function generateICS({
     `DTSTART;TZID=Europe/Paris:${dtStart}`,
     `DTEND;TZID=Europe/Paris:${dtEnd}`,
     `SUMMARY:Audit OpexIA — ${name}`,
-    `DESCRIPTION:Prospect: ${name}\\nEmail: ${email}\\nSecteur: ${sector}\\nBesoin: ${pain}${meetLink ? `\\nGoogle Meet: ${meetLink}` : ""}`,
+    `DESCRIPTION:Prospect: ${name}\\nEmail: ${email}\\nSecteur: ${sector}${meetLink ? `\\nGoogle Meet: ${meetLink}` : ""}`,
     `ORGANIZER;CN=OpexIA:mailto:${OWNER_EMAIL}`,
     `ATTENDEE;CN=${name}:mailto:${email || OWNER_EMAIL}`,
     meetLink ? `URL:${meetLink}` : "",
@@ -157,7 +153,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, phone, sector, pain, contactMethod, schedule, slotKey } = body;
+    const { name, email, phone, sector, contactMethod, schedule, slotKey } = body;
 
     if (!name || !schedule || !slotKey) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -173,11 +169,11 @@ export async function POST(req: Request) {
     const meetLink = process.env.GOOGLE_MEET_LINK || "";
 
     // Generate .ics calendar invite
-    const icsContent = generateICS({ name, email: email || "", sector, pain, slotKey, meetLink });
+    const icsContent = generateICS({ name, email: email || "", sector, slotKey, meetLink });
     const icsBase64 = Buffer.from(icsContent).toString("base64");
 
     // Add event to Google Calendar automatically
-    await createCalendarEvent({ name, email: email || "", sector, pain, slotKey, contactMethod });
+    await createCalendarEvent({ name, email: email || "", sector, slotKey, contactMethod });
 
     // Email to prospect
     if (email) {
@@ -247,7 +243,6 @@ export async function POST(req: Request) {
             <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Email</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${email || "—"}</td></tr>
             <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Téléphone</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${phone || "—"}</td></tr>
             <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Secteur</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${sector}</td></tr>
-            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Besoin</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${pain}</td></tr>
             <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Mode</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${contactMethod}</td></tr>
             <tr style="background: #f0f7ff;"><td style="padding: 12px 8px; color: #007AFF; font-weight: 600; font-size: 14px;">Créneau</td><td style="padding: 12px 8px; font-weight: 700; font-size: 16px; color: #007AFF;">${schedule}</td></tr>
           </table>
