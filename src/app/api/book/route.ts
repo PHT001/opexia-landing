@@ -268,6 +268,7 @@ export async function POST(req: Request) {
     console.error("Booking error:", message);
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL || "MISSING";
     const keyPrefix = (process.env.GOOGLE_PRIVATE_KEY || "").substring(0, 10);
-    return NextResponse.json({ error: "Erreur serveur", details: message, debug: { clientEmail, keyPrefix } }, { status: 500 });
+    const calId = process.env.GOOGLE_CALENDAR_ID || "MISSING";
+    return NextResponse.json({ error: "Erreur serveur", details: message, debug: { clientEmail, keyPrefix, calId: JSON.stringify(calId) } }, { status: 500 });
   }
 }
