@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const services = [
   {
@@ -227,7 +228,7 @@ export default function ServicesSection() {
           className="text-center mt-14"
         >
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             {"D\u00e9couvrir ce qu'on peut faire pour vous"}

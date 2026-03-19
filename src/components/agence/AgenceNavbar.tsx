@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const navLinks = [
   { label: "Services", href: "#services" },
@@ -70,7 +71,7 @@ export default function AgenceNavbar() {
           </div>
 
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             className="hidden md:inline-flex items-center justify-center rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, #007AFF 0%, #0055D4 100%)",
@@ -119,7 +120,7 @@ export default function AgenceNavbar() {
                 </a>
               ))}
               <a
-                href="https://wa.me/message/DUQV2FBF3TF2H1"
+                href={WHATSAPP_URL}
                 onClick={() => setMobileOpen(false)}
                 className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white mt-2"
                 style={{

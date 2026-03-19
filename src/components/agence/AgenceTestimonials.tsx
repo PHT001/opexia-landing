@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const testimonials = [
   {
@@ -203,7 +204,7 @@ export default function AgenceTestimonials() {
         {/* CTA */}
         <div className="text-center mt-16">
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-200"
           >
             Demandez votre audit offert

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 export default function AgenceFinalCTA() {
   return (
@@ -29,7 +30,7 @@ export default function AgenceFinalCTA() {
 
           <div className="mt-10">
             <a
-              href="https://wa.me/message/DUQV2FBF3TF2H1"
+              href={WHATSAPP_URL}
               className="inline-flex items-center justify-center rounded-full bg-[#007AFF] px-10 py-5 text-lg font-bold text-white transition-all hover:bg-[#0055D4] hover:shadow-2xl hover:shadow-blue-900/40"
             >
               Acc&eacute;der &agrave; mon audit gratuit

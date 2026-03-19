@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import LazyVideo from "@/components/ui/LazyVideo";
+import { WHATSAPP_URL } from "@/lib/constants";
 import AuditAnimation from "./AuditAnimation";
 import PlanAnimation from "./PlanAnimation";
 import DeployAnimation from "./DeployAnimation";
@@ -103,7 +104,7 @@ export default function ProcessSteps() {
             <LazyVideo src="/images/floatting.mp4" className="w-full h-auto" />
           </div>
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             className="relative z-10 inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
           >
             {"Lancer mon audit gratuit"}

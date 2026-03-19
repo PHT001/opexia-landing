@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 export default function FormationBridge() {
   return (
@@ -25,7 +26,7 @@ export default function FormationBridge() {
 
           <div className="mt-8">
             <a
-              href="https://wa.me/message/DUQV2FBF3TF2H1"
+              href={WHATSAPP_URL}
               className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] hover:shadow-lg hover:shadow-blue-500/25 transition-all"
             >
               D&eacute;couvrir mon potentiel IA

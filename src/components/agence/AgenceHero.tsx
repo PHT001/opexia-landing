@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import LazyVideo from "@/components/ui/LazyVideo";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const rotatingWords = ["automatise", "acc\u00e9l\u00e8re", "optimise"];
 
@@ -132,7 +133,7 @@ export default function AgenceHero() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
             >
               <a
-                href="https://wa.me/message/DUQV2FBF3TF2H1"
+                href={WHATSAPP_URL}
                 className="group inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
               >
                 Obtenir mon audit offert

@@ -1,5 +1,7 @@
 "use client";
 
+import { WHATSAPP_URL } from "@/lib/constants";
+
 export default function AgenceCalendly() {
   return (
     <section id="calendly" className="py-16 lg:py-20 bg-[#FAFAFA] scroll-mt-20">
@@ -19,7 +21,7 @@ export default function AgenceCalendly() {
 
         <div className="text-center">
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-3 rounded-full bg-[#25D366] px-10 py-5 text-lg font-bold text-white transition-all hover:bg-[#1da851] hover:shadow-2xl hover:shadow-green-900/30"

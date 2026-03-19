@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const cases = [
   {
@@ -241,7 +242,7 @@ export default function BeforeAfter() {
           className="text-center mt-12"
         >
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             R&eacute;server mon audit gratuit

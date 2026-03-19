@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 type Phase = "question" | "typing" | "results";
 
@@ -327,7 +328,7 @@ export default function SectorChat() {
                               className="flex flex-col sm:flex-row items-center gap-3 mt-3"
                             >
                               <a
-                                href="https://wa.me/message/DUQV2FBF3TF2H1"
+                                href={WHATSAPP_URL}
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#007AFF] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-lg hover:shadow-blue-200"
                               >
                                 Planifier mon audit offert

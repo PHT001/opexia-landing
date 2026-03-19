@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const timeline = [
   { year: "2023", event: "ChatGPT explose. Tout le monde en parle, personne n'agit.", opacity: "text-white/30" },
@@ -91,7 +92,7 @@ export default function UrgencyTimeline() {
           className="text-center mt-14"
         >
           <a
-            href="https://wa.me/message/DUQV2FBF3TF2H1"
+            href={WHATSAPP_URL}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             Demander mon diagnostic IA

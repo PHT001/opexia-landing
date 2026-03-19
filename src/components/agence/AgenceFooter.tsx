@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const footerLinks = [
   { label: "Services", href: "#services" },
@@ -27,7 +28,7 @@ export default function AgenceFooter() {
               <strong className="text-[#111]">1 heure</strong> pour d&eacute;couvrir ce que l&apos;IA peut changer. <strong className="text-[#111]">Gratuit.</strong>
             </p>
             <a
-              href="https://wa.me/message/DUQV2FBF3TF2H1"
+              href={WHATSAPP_URL}
               className="inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-bold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-500/20"
             >
               Prendre rendez-vous gratuit
@@ -65,7 +66,7 @@ export default function AgenceFooter() {
             </nav>
 
             <a
-              href="https://wa.me/message/DUQV2FBF3TF2H1"
+              href={WHATSAPP_URL}
               className="text-sm font-semibold text-[#007AFF] hover:text-[#0055D4] transition-colors"
             >
               R&eacute;server un audit &rarr;
