@@ -5,12 +5,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 /* ───────── Types ───────── */
-type Step = "welcome" | "sector" | "pain" | "team" | "contact" | "name" | "phone" | "done";
+type Step =
+  | "welcome"
+  | "sector"
+  | "pain"
+  | "team"
+  | "contact"
+  | "name"
+  | "email"
+  | "phone"
+  | "done";
 
 interface Message {
   id: number;
   role: "bot" | "user";
   text: string;
+  bold?: string; // substring to render bold
 }
 
 interface Choice {
@@ -44,9 +54,8 @@ const TEAMS: Choice[] = [
 ];
 
 const CONTACTS: Choice[] = [
-  { label: "📞 Appel de 15 min", value: "Appel téléphonique" },
+  { label: "📞 Appel WhatsApp · 15 min", value: "Appel WhatsApp" },
   { label: "💻 Google Meet", value: "Google Meet" },
-  { label: "💬 Via WhatsApp", value: "WhatsApp" },
 ];
 
 const TIME_SAVINGS: Record<string, string> = {
@@ -56,9 +65,31 @@ const TIME_SAVINGS: Record<string, string> = {
   "Création de contenu": "8 à 15h",
 };
 
+const EMAIL_DOMAINS = [
+  "@gmail.com",
+  "@outlook.fr",
+  "@hotmail.com",
+  "@yahoo.fr",
+  "@icloud.com",
+];
+
 /* ───────── Helper: open bot from anywhere ───────── */
 export function openLeadBot() {
   window.dispatchEvent(new Event("openLeadBot"));
+}
+
+/* ───────── Render message text with bold support ───────── */
+function RenderText({ text, bold }: { text: string; bold?: string }) {
+  if (!bold) return <>{text}</>;
+  const idx = text.indexOf(bold);
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <strong className="font-bold">{bold}</strong>
+      {text.slice(idx + bold.length)}
+    </>
+  );
 }
 
 /* ───────── Component ───────── */
@@ -68,12 +99,14 @@ export default function AgenceChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [answers, setAnswers] = useState({
     sector: "",
     pain: "",
     team: "",
     contactMethod: "",
     name: "",
+    email: "",
     phone: "",
   });
   const [started, setStarted] = useState(false);
@@ -90,9 +123,7 @@ export default function AgenceChatbot() {
 
   /* Listen for global open event */
   useEffect(() => {
-    const handler = () => {
-      setIsOpen(true);
-    };
+    const handler = () => setIsOpen(true);
     window.addEventListener("openLeadBot", handler);
     return () => window.removeEventListener("openLeadBot", handler);
   }, []);
@@ -107,30 +138,56 @@ export default function AgenceChatbot() {
 
   /* Focus input when needed */
   useEffect(() => {
-    if ((step === "name" || step === "phone") && isOpen) {
+    if ((step === "name" || step === "email" || step === "phone") && isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [step, isOpen]);
 
+  /* Email domain suggestions logic */
+  useEffect(() => {
+    if (step === "email") {
+      const val = inputValue;
+      const hasAt = val.includes("@");
+      const afterAt = hasAt ? val.split("@")[1] : "";
+      // Show suggestions when user types @ but hasn't completed the domain
+      setShowSuggestions(hasAt && !afterAt.includes(".") && afterAt.length < 10);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [inputValue, step]);
+
   /* Bot message with typing simulation */
-  const addBotMessage = useCallback((text: string, delay = 800): Promise<void> => {
-    return new Promise((resolve) => {
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages((prev) => [...prev, { id: Date.now() + Math.random(), role: "bot", text }]);
-        resolve();
-      }, delay);
-    });
-  }, []);
+  const addBotMessage = useCallback(
+    (text: string, delay = 800, bold?: string): Promise<void> => {
+      return new Promise((resolve) => {
+        setIsTyping(true);
+        setTimeout(() => {
+          setIsTyping(false);
+          setMessages((prev) => [
+            ...prev,
+            { id: Date.now() + Math.random(), role: "bot", text, bold },
+          ]);
+          resolve();
+        }, delay);
+      });
+    },
+    []
+  );
 
   const addUserMessage = (text: string) => {
-    setMessages((prev) => [...prev, { id: Date.now() + Math.random(), role: "user", text }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now() + Math.random(), role: "user", text },
+    ]);
   };
 
   const startConversation = async () => {
     await addBotMessage("Salut ! 👋 Je suis l'assistant OpexIA.", 500);
-    await addBotMessage("En 30 secondes, on va voir comment l'IA peut vous faire gagner du temps. C'est parti ?", 900);
+    await addBotMessage(
+      "En 30 secondes, on va voir comment l'IA peut vous faire gagner du temps. C'est parti ?",
+      900,
+      "30 secondes"
+    );
     setStep("welcome");
   };
 
@@ -147,7 +204,10 @@ export default function AgenceChatbot() {
       case "sector":
         setAnswers((prev) => ({ ...prev, sector: choice.value }));
         setStep("pain");
-        await addBotMessage("Et c'est quoi qui vous prend le plus de temps au quotidien ?", 700);
+        await addBotMessage(
+          "Et c'est quoi qui vous prend le plus de temps au quotidien ?",
+          700
+        );
         break;
 
       case "pain":
@@ -162,61 +222,89 @@ export default function AgenceChatbot() {
         setStep("contact");
         await addBotMessage(
           `Top ! D'après ce que vous me dites, on peut vous faire gagner ${savings} par mois. Nos clients voient les premiers résultats en 14 jours. 🚀`,
-          1000
+          1000,
+          savings
         );
-        await addBotMessage("Comment vous préférez qu'on en discute ?", 600);
+        await addBotMessage(
+          "Comment vous préférez qu'on en discute ?",
+          600
+        );
         break;
       }
 
       case "contact":
         setAnswers((prev) => ({ ...prev, contactMethod: choice.value }));
-        if (choice.value === "WhatsApp") {
-          await addBotMessage("Parfait, je vous redirige vers WhatsApp ! 💬", 500);
-          setStep("done");
-          setTimeout(() => {
-            const msg = encodeURIComponent(
-              `Bonjour ! Je suis intéressé par vos services d'automatisation IA.\n\nSecteur : ${answers.sector}\nBesoin : ${answers.pain}\nÉquipe : ${answers.team}\n\n(Envoyé depuis opexia-agency.com)`
-            );
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
-          }, 600);
-          await addBotMessage("La fenêtre WhatsApp devrait s'ouvrir. À très vite ! 🎉", 800);
-        } else {
-          setStep("name");
-          await addBotMessage("Super ! C'est quoi votre prénom ?", 600);
-        }
+        setStep("name");
+        await addBotMessage("Super choix ! C'est quoi votre prénom ?", 600);
         break;
     }
   };
 
-  /* Handle text input (name / phone) */
+  /* Apply email domain suggestion */
+  const applyEmailSuggestion = (domain: string) => {
+    const localPart = inputValue.split("@")[0];
+    setInputValue(localPart + domain);
+    setShowSuggestions(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  /* Handle text input (name / email / phone) */
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputValue.trim()) return;
     const value = inputValue.trim();
     addUserMessage(value);
     setInputValue("");
+    setShowSuggestions(false);
 
     if (step === "name") {
       setAnswers((prev) => ({ ...prev, name: value }));
-      setStep("phone");
-      await addBotMessage(`Enchanté ${value} ! Et votre numéro de téléphone ?`, 700);
-    } else if (step === "phone") {
-      const updatedAnswers = { ...answers, phone: value };
-      setAnswers(updatedAnswers);
+
+      if (answers.contactMethod === "Google Meet") {
+        setStep("email");
+        await addBotMessage(
+          `Enchanté ${value} ! Votre adresse email pour recevoir l'invitation Meet ?`,
+          700
+        );
+      } else {
+        setStep("phone");
+        await addBotMessage(
+          `Enchanté ${value} ! Et votre numéro pour qu'on vous appelle ?`,
+          700
+        );
+      }
+    } else if (step === "email") {
+      setAnswers((prev) => ({ ...prev, email: value }));
       setStep("done");
       await addBotMessage(
-        `C'est noté ${answers.name} ! 🎉 On vous recontacte dans les 24h pour un ${answers.contactMethod.toLowerCase()}.`,
+        `C'est noté ${answers.name} ! 🎉 On vous envoie l'invitation Google Meet dans les 24h.`,
         800
       );
-      await addBotMessage("Envoyez-nous un petit message sur WhatsApp pour confirmer :", 600);
+      await addBotMessage(
+        "Une question en attendant ? On reste disponible 👇",
+        600
+      );
+    } else if (step === "phone") {
+      setAnswers((prev) => ({ ...prev, phone: value }));
+      setStep("done");
+      await addBotMessage(
+        `C'est noté ${answers.name} ! 🎉 On vous appelle sur WhatsApp dans les 24h.`,
+        800
+      );
+      await addBotMessage(
+        "Une question en attendant ? On reste disponible 👇",
+        600
+      );
     }
   };
 
-  /* WhatsApp redirect with full context */
-  const handleWhatsAppFinal = () => {
-    const msg = encodeURIComponent(
-      `Bonjour, je suis ${answers.name} (${answers.phone}).\n\nSecteur : ${answers.sector}\nBesoin : ${answers.pain}\nÉquipe : ${answers.team}\nContact souhaité : ${answers.contactMethod}\n\n(Envoyé depuis opexia-agency.com)`
-    );
+  /* WhatsApp question link */
+  const handleWhatsAppQuestion = () => {
+    const context =
+      answers.name && answers.sector
+        ? `Bonjour, c'est ${answers.name}. J'ai une question à propos de vos services d'automatisation IA.\n\nSecteur : ${answers.sector}\nBesoin : ${answers.pain}\n\n(Envoyé depuis opexia-agency.com)`
+        : `Bonjour, j'ai une question à propos de vos services d'automatisation IA.\n\n(Envoyé depuis opexia-agency.com)`;
+    const msg = encodeURIComponent(context);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
   };
 
@@ -224,35 +312,89 @@ export default function AgenceChatbot() {
   const handleReset = () => {
     setMessages([]);
     setStep("welcome");
-    setAnswers({ sector: "", pain: "", team: "", contactMethod: "", name: "", phone: "" });
+    setAnswers({
+      sector: "",
+      pain: "",
+      team: "",
+      contactMethod: "",
+      name: "",
+      email: "",
+      phone: "",
+    });
     setInputValue("");
+    setShowSuggestions(false);
     setStarted(false);
-    setStarted(true);
-    startConversation();
+    setTimeout(() => {
+      setStarted(true);
+      startConversation();
+    }, 100);
   };
 
   /* Current options based on step */
   const getCurrentOptions = (): Choice[] => {
     switch (step) {
-      case "welcome": return [{ label: "C'est parti ! 🚀", value: "start" }];
-      case "sector": return SECTORS;
-      case "pain": return PAINS;
-      case "team": return TEAMS;
-      case "contact": return CONTACTS;
-      default: return [];
+      case "welcome":
+        return [{ label: "C'est parti ! 🚀", value: "start" }];
+      case "sector":
+        return SECTORS;
+      case "pain":
+        return PAINS;
+      case "team":
+        return TEAMS;
+      case "contact":
+        return CONTACTS;
+      default:
+        return [];
     }
   };
 
-  const showOptions = ["welcome", "sector", "pain", "team", "contact"].includes(step) && !isTyping;
-  const showInput = (step === "name" || step === "phone") && !isTyping;
-  const showWhatsAppButton = step === "done" && answers.contactMethod !== "WhatsApp" && !isTyping;
+  const showOptions =
+    ["welcome", "sector", "pain", "team", "contact"].includes(step) &&
+    !isTyping;
+  const showInput =
+    (step === "name" || step === "email" || step === "phone") && !isTyping;
+  const showDone = step === "done" && !isTyping;
   const options = getCurrentOptions();
 
   /* Progress */
-  const stepOrder: Step[] = ["welcome", "sector", "pain", "team", "contact", "name", "phone", "done"];
+  const stepOrder: Step[] = [
+    "welcome",
+    "sector",
+    "pain",
+    "team",
+    "contact",
+    "name",
+    "email",
+    "phone",
+    "done",
+  ];
   const currentIndex = stepOrder.indexOf(step);
-  const totalSteps = answers.contactMethod === "WhatsApp" ? 5 : 7;
-  const progress = Math.min(((currentIndex + 1) / totalSteps) * 100, 100);
+  const progress = Math.min(((currentIndex + 1) / 8) * 100, 100);
+
+  /* Input placeholder & type */
+  const getInputProps = () => {
+    switch (step) {
+      case "name":
+        return { placeholder: "Votre prénom...", type: "text" };
+      case "email":
+        return { placeholder: "votre@email.com", type: "email" };
+      case "phone":
+        return { placeholder: "06 XX XX XX XX", type: "tel" };
+      default:
+        return { placeholder: "", type: "text" };
+    }
+  };
+
+  /* Email suggestion filtering */
+  const getFilteredDomains = () => {
+    if (!inputValue.includes("@")) return EMAIL_DOMAINS;
+    const afterAt = inputValue.split("@")[1]?.toLowerCase() || "";
+    return EMAIL_DOMAINS.filter((d) =>
+      d.toLowerCase().startsWith("@" + afterAt)
+    );
+  };
+
+  const inputProps = getInputProps();
 
   return (
     <>
@@ -266,16 +408,21 @@ export default function AgenceChatbot() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#007AFF] text-white shadow-xl shadow-blue-900/30"
+            className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#007AFF] text-white shadow-xl shadow-blue-900/30"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            {/* Pulse */}
             <span className="absolute inset-0 rounded-full bg-[#007AFF] animate-ping opacity-20" />
           </motion.button>
         )}
@@ -289,18 +436,23 @@ export default function AgenceChatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="fixed bottom-0 right-0 z-50 flex flex-col bg-white shadow-2xl
-                       w-full h-[100dvh]
-                       sm:bottom-6 sm:right-6 sm:w-[400px] sm:h-auto sm:max-h-[min(640px,calc(100dvh-48px))] sm:rounded-2xl sm:border sm:border-gray-200"
+            className="fixed inset-0 z-50 flex flex-col bg-white
+                       sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[400px] sm:h-auto sm:max-h-[min(660px,calc(100dvh-48px))] sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl"
           >
             {/* Header */}
-            <div className="bg-[#0A0A0A] px-5 py-4 flex items-center justify-between sm:rounded-t-2xl flex-shrink-0">
+            <div className="bg-[#0A0A0A] px-4 py-3.5 sm:px-5 sm:py-4 flex items-center justify-between sm:rounded-t-2xl flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
-                    <Image src="/images/logobleu.png" alt="OpexIA" width={40} height={40} className="h-full w-full object-cover" />
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden flex-shrink-0">
+                    <Image
+                      src="/images/logobleu.png"
+                      alt="OpexIA"
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0A0A0A] bg-green-400" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full border-2 border-[#0A0A0A] bg-green-400" />
                 </div>
                 <div>
                   <p className="text-white text-sm font-semibold">OpexIA</p>
@@ -314,8 +466,18 @@ export default function AgenceChatbot() {
                 onClick={() => setIsOpen(false)}
                 className="h-8 w-8 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -330,23 +492,28 @@ export default function AgenceChatbot() {
             </div>
 
             {/* Messages Area */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 space-y-2.5 sm:space-y-3"
+            >
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3.5 py-2.5 sm:px-4 text-[13px] sm:text-sm leading-relaxed ${
                       msg.role === "user"
                         ? "bg-[#007AFF] text-white rounded-br-md"
                         : "bg-gray-100 text-gray-800 rounded-bl-md"
                     }`}
                   >
-                    {msg.text}
+                    <RenderText text={msg.text} bold={msg.bold} />
                   </div>
                 </motion.div>
               ))}
@@ -359,9 +526,18 @@ export default function AgenceChatbot() {
                   className="flex justify-start"
                 >
                   <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span
+                      className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <span
+                      className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span
+                      className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -376,19 +552,19 @@ export default function AgenceChatbot() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="px-4 pb-4 flex-shrink-0"
+                  className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
                 >
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {options.map((opt, i) => (
                       <motion.button
                         key={opt.value}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: i * 0.06 }}
+                        transition={{ delay: i * 0.05 }}
                         whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => handleChoice(opt)}
-                        className="rounded-full border border-[#007AFF]/25 bg-[#007AFF]/5 px-4 py-2.5 text-sm font-medium text-[#007AFF] hover:bg-[#007AFF] hover:text-white transition-colors duration-200"
+                        className="rounded-full border border-[#007AFF]/25 bg-[#007AFF]/5 px-3.5 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-medium text-[#007AFF] hover:bg-[#007AFF] hover:text-white active:bg-[#007AFF] active:text-white transition-colors duration-200"
                       >
                         {opt.label}
                       </motion.button>
@@ -398,79 +574,115 @@ export default function AgenceChatbot() {
               )}
             </AnimatePresence>
 
-            {/* ─── Text Input (name / phone) ─── */}
+            {/* ─── Text Input (name / email / phone) ─── */}
             <AnimatePresence>
               {showInput && (
-                <motion.form
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  onSubmit={handleSubmit}
-                  className="px-4 pb-4 flex gap-2 flex-shrink-0"
-                >
-                  <input
-                    ref={inputRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder={step === "name" ? "Votre prénom..." : "06 XX XX XX XX"}
-                    type={step === "phone" ? "tel" : "text"}
-                    className="flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!inputValue.trim()}
-                    className="h-10 w-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center hover:bg-[#0055D4] transition-colors disabled:opacity-30 flex-shrink-0"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </motion.form>
-              )}
-            </AnimatePresence>
-
-            {/* ─── Final WhatsApp Button ─── */}
-            <AnimatePresence>
-              {showWhatsAppButton && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="px-4 pb-4 space-y-2 flex-shrink-0"
+                  exit={{ opacity: 0, y: 10 }}
+                  className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0"
+                >
+                  {/* Email domain suggestions */}
+                  <AnimatePresence>
+                    {showSuggestions && getFilteredDomains().length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="flex flex-wrap gap-1.5 mb-2"
+                      >
+                        {getFilteredDomains().map((domain) => (
+                          <button
+                            key={domain}
+                            onClick={() => applyEmailSuggestion(domain)}
+                            className="rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-600 hover:bg-[#007AFF]/10 hover:text-[#007AFF] active:bg-[#007AFF]/10 active:text-[#007AFF] transition-colors"
+                          >
+                            {inputValue.split("@")[0]}
+                            <span className="font-medium">{domain}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <form
+                    onSubmit={handleSubmit}
+                    className="flex gap-2"
+                  >
+                    <input
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder={inputProps.placeholder}
+                      type={inputProps.type}
+                      autoComplete={
+                        step === "email"
+                          ? "email"
+                          : step === "phone"
+                          ? "tel"
+                          : "given-name"
+                      }
+                      className="flex-1 min-w-0 rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 transition-all"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!inputValue.trim()}
+                      className="h-10 w-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center hover:bg-[#0055D4] transition-colors disabled:opacity-30 flex-shrink-0"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 12h14M12 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ─── Done: Question WhatsApp + Reset ─── */}
+            <AnimatePresence>
+              {showDone && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-2 flex-shrink-0"
                 >
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={handleWhatsAppFinal}
-                    className="w-full rounded-full py-3.5 text-sm font-semibold text-white flex items-center justify-center gap-2 shadow-lg"
+                    onClick={handleWhatsAppQuestion}
+                    className="w-full rounded-full py-3 sm:py-3.5 text-[13px] sm:text-sm font-semibold text-white flex items-center justify-center gap-2 shadow-lg"
                     style={{ backgroundColor: "#25D366" }}
                   >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className="h-4 w-4 sm:h-5 sm:w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
                       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.553 4.116 1.518 5.855L.057 23.764l6.087-1.421A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.796 9.796 0 01-5.222-1.505l-.375-.222-3.61.843.91-3.502-.253-.392A9.796 9.796 0 012.18 12c0-5.422 4.398-9.82 9.82-9.82 5.422 0 9.82 4.398 9.82 9.82 0 5.422-4.398 9.82-9.82 9.82z" />
                     </svg>
-                    Confirmer sur WhatsApp
+                    Poser une question sur WhatsApp
                   </motion.button>
                   <button
                     onClick={handleReset}
                     className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors"
                   >
-                    Recommencer la conversation
+                    Recommencer
                   </button>
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Done state for WhatsApp direct */}
-            {step === "done" && answers.contactMethod === "WhatsApp" && !isTyping && (
-              <div className="px-4 pb-4 flex-shrink-0">
-                <button
-                  onClick={handleReset}
-                  className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors"
-                >
-                  Recommencer la conversation
-                </button>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
