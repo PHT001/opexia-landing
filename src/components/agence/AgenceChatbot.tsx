@@ -598,9 +598,53 @@ export default function AgenceChatbot() {
                 <div />
               </div>
 
-              {/* ─── Options Buttons ─── */}
+              {/* ─── Menu Buttons (prominent) ─── */}
               <AnimatePresence>
-                {showOptions && options.length > 0 && (
+                {step === "menu" && !isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="px-3 pb-3 sm:px-4 sm:pb-4 flex-shrink-0 space-y-2"
+                  >
+                    <motion.button
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleChoice({ label: "📅 Prendre RDV en 30 secondes", value: "booking" })}
+                      className="w-full rounded-xl py-3.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                      style={{
+                        background: "linear-gradient(135deg, #007AFF 0%, #0055D4 100%)",
+                        boxShadow: "0 4px 14px rgba(0,122,255,0.35)",
+                      }}
+                    >
+                      <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Prendre RDV en 30 secondes
+                    </motion.button>
+                    <motion.button
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleChoice({ label: "💬 Nous contacter par WhatsApp", value: "whatsapp" })}
+                      className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-[#25D366]/40 hover:text-[#25D366]"
+                    >
+                      <svg className="h-4 w-4 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.553 4.116 1.518 5.855L.057 23.764l6.087-1.421A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.796 9.796 0 01-5.222-1.505l-.375-.222-3.61.843.91-3.502-.253-.392A9.796 9.796 0 012.18 12c0-5.422 4.398-9.82 9.82-9.82 5.422 0 9.82 4.398 9.82 9.82 0 5.422-4.398 9.82-9.82 9.82z" />
+                      </svg>
+                      Nous contacter par WhatsApp
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ─── Options Buttons (sector, contact) ─── */}
+              <AnimatePresence>
+                {showOptions && step !== "menu" && options.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
