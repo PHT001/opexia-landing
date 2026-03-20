@@ -239,10 +239,12 @@ export default function AgenceChatbot() {
     }
   }, [isOpen, started, startConversation, startBookingFlow]);
 
-  /* Focus input when needed */
+  /* Focus input when needed — longer delay for mobile keyboards */
   useEffect(() => {
     if ((step === "name" || step === "email" || step === "phone") && isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const t1 = setTimeout(() => inputRef.current?.focus(), 300);
+      const t2 = setTimeout(() => inputRef.current?.focus(), 600);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [step, isOpen]);
 
@@ -713,7 +715,13 @@ export default function AgenceChatbot() {
                         ref={inputRef}
                         value={inputValue}
                         onChange={(e) => {
-                          setInputValue(e.target.value);
+                          if (step === "phone") {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            const formatted = digits.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
+                            setInputValue(formatted);
+                          } else {
+                            setInputValue(e.target.value);
+                          }
                           if (emailError) setEmailError(false);
                           if (phoneError) setPhoneError(false);
                         }}

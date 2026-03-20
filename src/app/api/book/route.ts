@@ -32,17 +32,17 @@ function sanitizeICSValue(str: string): string {
 const SLOT_KEY_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_SECTORS = [
-  "E-commerce",
-  "SaaS / Tech",
-  "Agence / Consulting",
+  "Commerce / Retail",
+  "BTP / Artisanat",
+  "Consulting / Services",
+  "Santé / Bien-être",
   "Immobilier",
-  "Santé",
-  "Finance",
-  "Éducation",
-  "Restauration",
+  "Formation / Coaching",
+  "Industrie / Logistique",
+  "Tech / Digital",
   "Autre",
 ];
-const VALID_CONTACT_METHODS = ["Google Meet", "WhatsApp"];
+const VALID_CONTACT_METHODS = ["Appel téléphonique", "Google Meet"];
 
 /* ───── Simple in-memory rate limiter ───── */
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -291,6 +291,7 @@ export async function POST(req: Request) {
     const safeSchedule = escapeHtml(schedule);
 
     const isGoogleMeet = contactMethod === "Google Meet";
+    const isCall = contactMethod === "Appel téléphonique";
     const meetLink = process.env.GOOGLE_MEET_LINK || "";
 
     // Generate .ics calendar invite
@@ -333,7 +334,7 @@ export async function POST(req: Request) {
             ` : `
               <div style="background: #f0fff4; border-radius: 12px; padding: 20px; margin: 24px 0;">
                 <p style="font-size: 14px; color: #666; margin: 0;">
-                  Nous vous appellerons sur WhatsApp au numéro indiqué.
+                  Nous vous appellerons au numéro indiqué.
                 </p>
               </div>
             `}
