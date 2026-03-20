@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
-import { openLeadBot } from "@/lib/constants";
+import { openLeadBotBooking } from "@/lib/constants";
 
 const testimonials = [
   {
@@ -76,7 +76,7 @@ export default function AgenceTestimonials() {
   }, []);
 
   return (
-    <section className="py-14 lg:py-20 bg-white overflow-hidden">
+    <section id="testimonials" className="py-14 lg:py-20 bg-white overflow-hidden scroll-mt-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left — Header + navigation */}
@@ -104,6 +104,7 @@ export default function AgenceTestimonials() {
                 <button
                   key={i}
                   onClick={() => setActiveIndex(i)}
+                  aria-label={`Témoignage ${i + 1}`}
                   className={`transition-all duration-300 rounded-full ${
                     i === activeIndex
                       ? "w-8 h-2 bg-[#007AFF]"
@@ -126,6 +127,7 @@ export default function AgenceTestimonials() {
                   <button
                     key={t.sector}
                     onClick={() => setActiveIndex(i)}
+                    aria-label={`Voir témoignage ${t.sector}`}
                     className={`text-xs font-medium px-3 py-1.5 rounded-full transition-all cursor-pointer ${
                       i === activeIndex
                         ? "bg-[#0A0A0A] text-white shadow-sm"
@@ -183,6 +185,7 @@ export default function AgenceTestimonials() {
             <div className="absolute -bottom-14 right-0 flex gap-2">
               <button
                 onClick={() => setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+                aria-label="Témoignage précédent"
                 className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -191,6 +194,7 @@ export default function AgenceTestimonials() {
               </button>
               <button
                 onClick={next}
+                aria-label="Témoignage suivant"
                 className="w-10 h-10 rounded-full bg-[#0A0A0A] flex items-center justify-center text-white hover:bg-[#222] transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -204,7 +208,7 @@ export default function AgenceTestimonials() {
         {/* CTA */}
         <div className="text-center mt-16">
           <button
-            onClick={openLeadBot}
+            onClick={openLeadBotBooking}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-200"
           >
             Demandez votre audit offert

@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { openLeadBot } from "@/lib/constants";
+import { openLeadBotBooking } from "@/lib/constants";
 
 const navLinks = [
-  { label: "Services", href: "#services" },
-  { label: "Résultats", href: "#resultats" },
   { label: "Processus", href: "#process" },
+  { label: "Témoignages", href: "#testimonials" },
   { label: "FAQ", href: "#faq" },
+  { label: "Nous contacter", href: "/contact" },
 ];
 
 export default function AgenceNavbar() {
@@ -52,7 +52,7 @@ export default function AgenceNavbar() {
         <div className="absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <div className="flex items-center justify-between">
-          <a href="#" className="flex items-center">
+          <a href="/" className="flex items-center">
             <span className="text-xl font-extrabold text-white tracking-tight">
               Opex<span className="text-[#5AC8FA]">IA</span>
             </span>
@@ -71,7 +71,7 @@ export default function AgenceNavbar() {
           </div>
 
           <button
-            onClick={openLeadBot}
+            onClick={openLeadBotBooking}
             className="hidden md:inline-flex items-center justify-center rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, #007AFF 0%, #0055D4 100%)",
@@ -120,7 +120,7 @@ export default function AgenceNavbar() {
                 </a>
               ))}
               <button
-                onClick={() => { openLeadBot(); setMobileOpen(false); }}
+                onClick={() => { openLeadBotBooking(); setMobileOpen(false); }}
                 className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white mt-2"
                 style={{
                   background: "linear-gradient(135deg, #007AFF 0%, #0055D4 100%)",

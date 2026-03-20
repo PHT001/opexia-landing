@@ -17,11 +17,11 @@ const faqs: { q: string; a: ReactNode }[] = [
     a: <>Pas du tout. On s&apos;occupe de tout : installation, configuration, tests, formation de vos équipes. Vous n&apos;avez <B>rien à installer</B>, rien à coder, rien à maintenir. Notre objectif est que vos systèmes tournent en <B>14 jours</B>, sans friction.</>,
   },
   {
-    q: "Combien ça coûte ?",
+    q: "Combien coûte une agence IA ?",
     a: <>Chaque projet est <B>sur-mesure</B>, donc le coût dépend de vos besoins. L&apos;<B>audit gratuit d&apos;1 heure</B> permet de chiffrer précisément : combien ça coûte ET combien ça vous fait économiser. La plupart de nos clients constatent un <B>ROI positif en 2 à 3 mois</B>.</>,
   },
   {
-    q: "Et si ça ne marche pas ?",
+    q: "Et si l'automatisation IA ne marche pas ?",
     a: <>On garantit des <B>résultats mesurables</B>. On définit ensemble des <B>KPIs clairs</B> avant de commencer (temps gagné, coûts réduits, taux de conversion). Si les objectifs ne sont pas atteints, on ajuste jusqu&apos;à ce que ça fonctionne.</>,
   },
   {
@@ -29,7 +29,7 @@ const faqs: { q: string; a: ReactNode }[] = [
     a: <>On a accompagné des clients dans <B>8 secteurs différents</B> : BTP, immobilier, santé, e-commerce, restauration, logistique, cabinets comptables... <B>L&apos;IA s&apos;adapte à tout</B>. Et c&apos;est justement notre job de l&apos;adapter à votre métier.</>,
   },
   {
-    q: "Je n'y connais rien en IA",
+    q: "Je n'y connais rien en intelligence artificielle",
     a: <>C&apos;est exactement pour ça qu&apos;on existe. <B>Zéro jargon technique</B>, que du concret. On vous explique tout en termes de <B>résultats business</B> : temps gagné, argent économisé, clients gagnés. Pas besoin de comprendre comment ça marche sous le capot.</>,
   },
   {
@@ -37,7 +37,7 @@ const faqs: { q: string; a: ReactNode }[] = [
     a: <>Toutes nos solutions sont <B>conformes RGPD</B>. Vos données restent hébergées en Europe, chiffrées, et ne sont jamais utilisées pour entraîner des modèles tiers. On signe un <B>DPA (accord de traitement de données)</B> avec chaque client. La confidentialité est non-négociable.</>,
   },
   {
-    q: "Au bout de combien de temps je vois des résultats ?",
+    q: "Au bout de combien de temps je vois des résultats avec l'IA ?",
     a: <>Les premiers gains sont visibles <B>dès la deuxième semaine</B> de déploiement. En moyenne, nos clients récupèrent <B>10 à 20h/mois par équipe</B> sur le premier trimestre. On définit des KPIs mesurables avant de commencer pour que les résultats soient concrets et vérifiables.</>,
   },
 ];
@@ -49,6 +49,7 @@ function FAQItem({ q, a }: { q: string; a: ReactNode }) {
     <div className="border-b border-white/10 last:border-0">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between py-6 text-left group"
       >
         <span className="text-base lg:text-lg font-semibold text-white pr-8 group-hover:text-[#007AFF] transition-colors">

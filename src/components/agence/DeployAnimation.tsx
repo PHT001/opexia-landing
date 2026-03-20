@@ -129,7 +129,6 @@ export default function DeployAnimation() {
               <div className="space-y-2 flex-1">
                 {installSteps.map((item, i) => {
                   const isDone = i < installProgress;
-                  const isCurrent = i === installProgress - 1;
                   return (
                     <motion.div
                       key={item.label}

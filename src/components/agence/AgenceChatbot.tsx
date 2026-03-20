@@ -6,6 +6,7 @@ import Image from "next/image";
 
 /* ───────── Types ───────── */
 type Step =
+  | "menu"
   | "sector"
   | "contact"
   | "name"
@@ -74,9 +75,14 @@ function getNextAvailableDays(count: number): Date[] {
   return days;
 }
 
-/* ───────── Helper: open bot from anywhere ───────── */
+/* ───────── Helpers: open bot from anywhere ───────── */
+/** Opens the chatbot in menu mode (message vs booking) */
 export function openLeadBot() {
   window.dispatchEvent(new Event("openLeadBot"));
+}
+/** Opens the chatbot directly in booking mode (skips menu) */
+export function openLeadBotBooking() {
+  window.dispatchEvent(new Event("openLeadBotBooking"));
 }
 
 /* ───────── Render message text with bold support ───────── */
@@ -96,11 +102,12 @@ function RenderText({ text, bold }: { text: string; bold?: string }) {
 /* ───────── Component ───────── */
 export default function AgenceChatbot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<Step>("sector");
+  const [step, setStep] = useState<Step>("menu");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [emailError, setEmailError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const [answers, setAnswers] = useState({
     sector: "",
     contactMethod: "",
@@ -160,28 +167,6 @@ export default function AgenceChatbot() {
     }
   }, [messages, isTyping]);
 
-  /* Listen for global open event */
-  useEffect(() => {
-    const handler = () => setIsOpen(true);
-    window.addEventListener("openLeadBot", handler);
-    return () => window.removeEventListener("openLeadBot", handler);
-  }, []);
-
-  /* Start conversation on first open */
-  useEffect(() => {
-    if (isOpen && !started) {
-      setStarted(true);
-      startConversation();
-    }
-  }, [isOpen, started]);
-
-  /* Focus input when needed */
-  useEffect(() => {
-    if ((step === "name" || step === "email" || step === "phone") && isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [step, isOpen]);
-
   /* Bot message with typing simulation */
   const addBotMessage = useCallback(
     (text: string, delay = 800, bold?: string): Promise<void> => {
@@ -207,18 +192,78 @@ export default function AgenceChatbot() {
     ]);
   };
 
-  /* Start straight with first question */
-  const startConversation = async () => {
+  /* Start with menu (2 choices) */
+  const startConversation = useCallback(async () => {
+    await addBotMessage("Bonjour 👋 Comment pouvons-nous vous aider ?", 500);
+    setStep("menu");
+  }, [addBotMessage]);
+
+  /* Start directly in booking mode (called by CTAs) */
+  const startBookingFlow = useCallback(async () => {
     await addBotMessage("Bonjour 👋 Prenez rendez-vous en 30 secondes.", 500, "30 secondes");
     await addBotMessage("Dans quel secteur exercez-vous ?", 700);
     setStep("sector");
-  };
+  }, [addBotMessage]);
+
+  const pendingMode = useRef<"menu" | "booking" | null>(null);
+
+  /* Listen for global open events */
+  useEffect(() => {
+    const handleMenu = () => {
+      pendingMode.current = "menu";
+      setIsOpen(true);
+    };
+    const handleBooking = () => {
+      pendingMode.current = "booking";
+      setIsOpen(true);
+    };
+    window.addEventListener("openLeadBot", handleMenu);
+    window.addEventListener("openLeadBotBooking", handleBooking);
+    return () => {
+      window.removeEventListener("openLeadBot", handleMenu);
+      window.removeEventListener("openLeadBotBooking", handleBooking);
+    };
+  }, []);
+
+  /* Start conversation on first open */
+  useEffect(() => {
+    if (isOpen && !started) {
+      setStarted(true);
+      const mode = pendingMode.current;
+      pendingMode.current = null;
+      if (mode === "booking") {
+        startBookingFlow();
+      } else {
+        startConversation();
+      }
+    }
+  }, [isOpen, started, startConversation, startBookingFlow]);
+
+  /* Focus input when needed */
+  useEffect(() => {
+    if ((step === "name" || step === "email" || step === "phone") && isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [step, isOpen]);
 
   /* Handle button choices */
   const handleChoice = async (choice: Choice) => {
     addUserMessage(choice.label);
 
     switch (step) {
+      case "menu":
+        if (choice.value === "whatsapp") {
+          const msg = encodeURIComponent("Bonjour ! Je souhaiterais poser une question concernant vos services d'automatisation IA.");
+          window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+          await addBotMessage("Vous allez être redirigé vers WhatsApp. À tout de suite ! 🙌", 600);
+          setStep("done");
+        } else {
+          await addBotMessage("Prenez rendez-vous en 30 secondes.", 500, "30 secondes");
+          await addBotMessage("Dans quel secteur exercez-vous ?", 700);
+          setStep("sector");
+        }
+        break;
+
       case "sector":
         setAnswers((prev) => ({ ...prev, sector: choice.value }));
         setStep("contact");
@@ -323,7 +368,14 @@ export default function AgenceChatbot() {
       return;
     }
 
+    // Phone validation
+    if (step === "phone" && !/^[\d\s\-+().]{7,20}$/.test(value)) {
+      setPhoneError(true);
+      return;
+    }
+
     setEmailError(false);
+    setPhoneError(false);
     addUserMessage(value);
     setInputValue("");
 
@@ -354,10 +406,11 @@ export default function AgenceChatbot() {
   /* Reset conversation */
   const handleReset = () => {
     setMessages([]);
-    setStep("sector");
+    setStep("menu");
     setAnswers({ sector: "", contactMethod: "", name: "", email: "", phone: "", schedule: "" });
     setInputValue("");
     setEmailError(false);
+    setPhoneError(false);
     setSelectedDay(null);
     setStarted(false);
     setTimeout(() => {
@@ -366,16 +419,23 @@ export default function AgenceChatbot() {
     }, 100);
   };
 
+  /* Menu choices */
+  const MENU_CHOICES: Choice[] = [
+    { label: "💬 Nous envoyer un message", value: "whatsapp" },
+    { label: "📅 Prendre un RDV", value: "booking" },
+  ];
+
   /* Current options based on step */
   const getCurrentOptions = (): Choice[] => {
     switch (step) {
+      case "menu": return MENU_CHOICES;
       case "sector": return SECTORS;
       case "contact": return CONTACTS;
       default: return [];
     }
   };
 
-  const showOptions = ["sector", "contact"].includes(step) && !isTyping;
+  const showOptions = ["menu", "sector", "contact"].includes(step) && !isTyping;
   const showInput = (step === "name" || step === "email" || step === "phone") && !isTyping;
   const showSchedule = step === "schedule" && !isTyping;
   const showDone = step === "done" && !isTyping;
@@ -398,7 +458,7 @@ export default function AgenceChatbot() {
 
   /* Progress */
   const stepMap: Record<Step, number> = {
-    sector: 1, contact: 2, name: 3, email: 4, phone: 5, schedule: 6, done: 7,
+    menu: 0, sector: 1, contact: 2, name: 3, email: 4, phone: 5, schedule: 6, done: 7,
   };
   const progress = Math.min((stepMap[step] / 7) * 100, 100);
 
@@ -426,6 +486,7 @@ export default function AgenceChatbot() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
+            aria-label="Ouvrir le chat"
             className="fixed bottom-5 right-5 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-[#007AFF] text-white shadow-xl shadow-blue-900/30"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -456,6 +517,9 @@ export default function AgenceChatbot() {
                 paddingTop: "env(safe-area-inset-top)",
                 paddingBottom: "env(safe-area-inset-bottom)",
               }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Chat OpexIA"
               className="fixed inset-0 z-[9999] flex flex-col bg-white
                          sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[min(660px,calc(100dvh-48px))] sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl"
             >
@@ -478,6 +542,7 @@ export default function AgenceChatbot() {
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
+                  aria-label="Fermer le chat"
                   className="h-8 w-8 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -490,6 +555,10 @@ export default function AgenceChatbot() {
               <div className="h-1 bg-gray-100 flex-shrink-0">
                 <motion.div
                   className="h-full bg-[#007AFF]"
+                  role="progressbar"
+                  aria-valuenow={Math.round(progress)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                 />
@@ -591,6 +660,9 @@ export default function AgenceChatbot() {
                     {emailError && (
                       <p className="text-red-500 text-xs mb-2 px-1">Veuillez entrer un email valide</p>
                     )}
+                    {phoneError && (
+                      <p className="text-red-500 text-xs mb-2 px-1">Veuillez entrer un numéro de téléphone valide</p>
+                    )}
 
                     <form onSubmit={handleSubmit} className="flex gap-2">
                       <input
@@ -599,13 +671,14 @@ export default function AgenceChatbot() {
                         onChange={(e) => {
                           setInputValue(e.target.value);
                           if (emailError) setEmailError(false);
+                          if (phoneError) setPhoneError(false);
                         }}
                         placeholder={inputProps.placeholder}
                         type={inputProps.type}
                         autoComplete={step === "email" ? "email" : step === "phone" ? "tel" : "given-name"}
                         autoCapitalize={step === "email" ? "none" : step === "phone" ? "none" : "words"}
                         className={`flex-1 min-w-0 rounded-full border px-4 py-2.5 text-base outline-none transition-all ${
-                          emailError
+                          emailError || phoneError
                             ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
                             : "border-gray-200 focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10"
                         }`}

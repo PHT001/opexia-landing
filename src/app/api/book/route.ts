@@ -2,8 +2,63 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { google } from "googleapis";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const OWNER_EMAIL = "contact@opexia-agency.com";
+/* ───── Lazy-init Resend so builds don't crash without env vars ───── */
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
+
+const OWNER_EMAIL = process.env.OWNER_EMAIL || "contact@opexia-agency.com";
+
+/* ───── HTML sanitization ───── */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* ───── ICS value sanitization ───── */
+function sanitizeICSValue(str: string): string {
+  return str.replace(/[\r\n\\;,]/g, "");
+}
+
+/* ───── Input validation helpers ───── */
+const SLOT_KEY_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_SECTORS = [
+  "E-commerce",
+  "SaaS / Tech",
+  "Agence / Consulting",
+  "Immobilier",
+  "Santé",
+  "Finance",
+  "Éducation",
+  "Restauration",
+  "Autre",
+];
+const VALID_CONTACT_METHODS = ["Google Meet", "WhatsApp"];
+
+/* ───── Simple in-memory rate limiter ───── */
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX;
+}
 
 /* ───── Google Calendar auth ───── */
 function getCalendarClient() {
@@ -23,39 +78,34 @@ function getCalendarClient() {
 
 /* ───── Fetch booked slots from Google Calendar ───── */
 async function getBookedSlotsFromCalendar(): Promise<string[]> {
-  try {
-    const calendar = getCalendarClient();
-    const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+  const calendar = getCalendarClient();
+  const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
 
-    const now = new Date();
-    const inSevenDays = new Date();
-    inSevenDays.setDate(now.getDate() + 8);
+  const now = new Date();
+  const inSevenDays = new Date();
+  inSevenDays.setDate(now.getDate() + 8);
 
-    const res = await calendar.events.list({
-      calendarId,
-      timeMin: now.toISOString(),
-      timeMax: inSevenDays.toISOString(),
-      singleEvents: true,
-      orderBy: "startTime",
-      q: "Audit OpexIA",
-    });
+  const res = await calendar.events.list({
+    calendarId,
+    timeMin: now.toISOString(),
+    timeMax: inSevenDays.toISOString(),
+    singleEvents: true,
+    orderBy: "startTime",
+    q: "Audit OpexIA",
+  });
 
-    const slots: string[] = [];
-    for (const event of res.data.items || []) {
-      if (event.start?.dateTime) {
-        // Convert to "YYYY-MM-DDThh:mm" format in Europe/Paris
-        const dt = new Date(event.start.dateTime);
-        const parisTime = dt.toLocaleString("sv-SE", { timeZone: "Europe/Paris" });
-        // "sv-SE" gives "YYYY-MM-DD HH:MM:SS"
-        const slotKey = parisTime.slice(0, 16).replace(" ", "T");
-        slots.push(slotKey);
-      }
+  const slots: string[] = [];
+  for (const event of res.data.items || []) {
+    if (event.start?.dateTime) {
+      // Convert to "YYYY-MM-DDThh:mm" format in Europe/Paris
+      const dt = new Date(event.start.dateTime);
+      const parisTime = dt.toLocaleString("sv-SE", { timeZone: "Europe/Paris" });
+      // "sv-SE" gives "YYYY-MM-DD HH:MM:SS"
+      const slotKey = parisTime.slice(0, 16).replace(" ", "T");
+      slots.push(slotKey);
     }
-    return slots;
-  } catch (err) {
-    console.error("Failed to fetch calendar events:", err);
-    return [];
   }
+  return slots;
 }
 
 /* ───── Create Google Calendar event ───── */
@@ -78,8 +128,14 @@ async function createCalendarEvent({
   const startDateTime = `${slotKey}:00`;
   const [date, time] = slotKey.split("T");
   const [hour, minute] = time.split(":");
-  const endHour = parseInt(hour, 10) + 1;
-  const endDateTime = `${date}T${String(endHour).padStart(2, "0")}:${minute}:00`;
+  const h = parseInt(hour, 10);
+  const endH = (h + 1) % 24;
+  const endDate = endH < h ? (() => {
+    const d = new Date(`${date}T${hour}:${minute}:00`);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  })() : date;
+  const endDateTime = `${endDate}T${String(endH).padStart(2, "0")}:${minute}:00`;
 
   await calendar.events.insert({
     calendarId,
@@ -107,14 +163,27 @@ function generateICS({
   slotKey: string;
   meetLink: string;
 }): string {
+  const safeName = sanitizeICSValue(name);
+  const safeEmail = sanitizeICSValue(email);
+  const safeSector = sanitizeICSValue(sector);
+
   const [date, time] = slotKey.split("T");
   const [year, month, day] = date.split("-");
   const [hour, minute] = time.split(":");
   const startH = parseInt(hour, 10);
-  const endH = startH + 1;
+  const endH = (startH + 1) % 24;
 
   const dtStart = `${year}${month}${day}T${String(startH).padStart(2, "0")}${minute}00`;
-  const dtEnd = `${year}${month}${day}T${String(endH).padStart(2, "0")}${minute}00`;
+  // Handle day rollover for endH
+  let endDateStr: string;
+  if (endH < startH) {
+    const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day) + 1);
+    endDateStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  } else {
+    endDateStr = `${year}${month}${day}`;
+  }
+  const dtEnd = `${endDateStr}T${String(endH).padStart(2, "0")}${minute}00`;
+
   const now = new Date();
   const stamp = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}T${String(now.getUTCHours()).padStart(2, "0")}${String(now.getUTCMinutes()).padStart(2, "0")}${String(now.getUTCSeconds()).padStart(2, "0")}Z`;
   const uid = `${slotKey}-${Date.now()}@opexia-agency.com`;
@@ -130,10 +199,10 @@ function generateICS({
     `DTSTAMP:${stamp}`,
     `DTSTART;TZID=Europe/Paris:${dtStart}`,
     `DTEND;TZID=Europe/Paris:${dtEnd}`,
-    `SUMMARY:Audit OpexIA — ${name}`,
-    `DESCRIPTION:Prospect: ${name}\\nEmail: ${email}\\nSecteur: ${sector}${meetLink ? `\\nGoogle Meet: ${meetLink}` : ""}`,
+    `SUMMARY:Audit OpexIA — ${safeName}`,
+    `DESCRIPTION:Prospect: ${safeName}\\nEmail: ${safeEmail}\\nSecteur: ${safeSector}${meetLink ? `\\nGoogle Meet: ${meetLink}` : ""}`,
     `ORGANIZER;CN=OpexIA:mailto:${OWNER_EMAIL}`,
-    `ATTENDEE;CN=${name}:mailto:${email || OWNER_EMAIL}`,
+    `ATTENDEE;CN=${safeName}:mailto:${safeEmail || OWNER_EMAIL}`,
     meetLink ? `URL:${meetLink}` : "",
     "STATUS:CONFIRMED",
     "BEGIN:VALARM",
@@ -150,25 +219,76 @@ function generateICS({
 
 /* ───── GET: return booked slots from Google Calendar ───── */
 export async function GET() {
-  const booked = await getBookedSlotsFromCalendar();
-  return NextResponse.json({ booked });
+  try {
+    const booked = await getBookedSlotsFromCalendar();
+    return NextResponse.json({ booked });
+  } catch (err) {
+    console.error("Failed to fetch booked slots:", err);
+    return NextResponse.json({ error: "Impossible de récupérer les créneaux" }, { status: 500 });
+  }
 }
 
 /* ───── POST: book a slot + send emails + add to Google Calendar ───── */
 export async function POST(req: Request) {
   try {
+    // Rate limiting
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json({ error: "Trop de requêtes, réessayez plus tard" }, { status: 429 });
+    }
+
     const body = await req.json();
     const { name, email, phone, sector, contactMethod, schedule, slotKey } = body;
 
-    if (!name || !schedule || !slotKey) {
+    // Validate required fields are present and are strings
+    if (
+      !name || typeof name !== "string" ||
+      !schedule || typeof schedule !== "string" ||
+      !slotKey || typeof slotKey !== "string"
+    ) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
+    // Validate slotKey format
+    if (!SLOT_KEY_REGEX.test(slotKey)) {
+      return NextResponse.json({ error: "Format de créneau invalide" }, { status: 400 });
+    }
+
+    // Validate email format if provided
+    if (email && (typeof email !== "string" || !EMAIL_REGEX.test(email))) {
+      return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+    }
+
+    // Validate sector
+    if (!sector || typeof sector !== "string" || !VALID_SECTORS.includes(sector)) {
+      return NextResponse.json({ error: "Secteur invalide" }, { status: 400 });
+    }
+
+    // Validate contactMethod
+    if (!contactMethod || typeof contactMethod !== "string" || !VALID_CONTACT_METHODS.includes(contactMethod)) {
+      return NextResponse.json({ error: "Mode de contact invalide" }, { status: 400 });
+    }
+
     // Check if slot is already taken (from Google Calendar)
-    const bookedSlots = await getBookedSlotsFromCalendar();
+    let bookedSlots: string[];
+    try {
+      bookedSlots = await getBookedSlotsFromCalendar();
+    } catch (err) {
+      console.error("Calendar unavailable:", err);
+      return NextResponse.json({ error: "Service calendrier indisponible" }, { status: 503 });
+    }
     if (bookedSlots.includes(slotKey)) {
       return NextResponse.json({ error: "Créneau déjà pris" }, { status: 409 });
     }
+
+    // Sanitize inputs for HTML emails
+    const safeName = escapeHtml(name);
+    const safeEmail = email ? escapeHtml(email) : "";
+    const safePhone = phone ? escapeHtml(phone) : "";
+    const safeSector = escapeHtml(sector);
+    const safeContactMethod = escapeHtml(contactMethod);
+    const safeSchedule = escapeHtml(schedule);
 
     const isGoogleMeet = contactMethod === "Google Meet";
     const meetLink = process.env.GOOGLE_MEET_LINK || "";
@@ -180,20 +300,22 @@ export async function POST(req: Request) {
     // Add event to Google Calendar automatically
     await createCalendarEvent({ name, email: email || "", sector, slotKey, contactMethod });
 
+    const resend = getResend();
+
     // Email to prospect
     if (email) {
       await resend.emails.send({
         from: `OpexIA <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
         to: email,
-        subject: `Confirmation de votre RDV – ${schedule}`,
+        subject: `Confirmation de votre RDV – ${safeSchedule}`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
             <div style="text-align: center; margin-bottom: 32px;">
               <h1 style="font-size: 24px; font-weight: 700; color: #111; margin: 0;">OpexIA</h1>
             </div>
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">Bonjour ${name},</p>
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">Bonjour ${safeName},</p>
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
-              Votre audit gratuit est confirmé pour le <strong>${schedule}</strong>.
+              Votre audit gratuit est confirmé pour le <strong>${safeSchedule}</strong>.
             </p>
             ${isGoogleMeet && meetLink ? `
               <div style="background: #f0f7ff; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
@@ -239,17 +361,17 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: `OpexIA Bot <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
       to: OWNER_EMAIL,
-      subject: `Nouveau RDV – ${name} · ${schedule}`,
+      subject: `Nouveau RDV – ${safeName} · ${safeSchedule}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
           <h2 style="font-size: 20px; color: #111; margin: 0 0 20px 0;">Nouveau rendez-vous</h2>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Nom</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${name}</td></tr>
-            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Email</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${email || "—"}</td></tr>
-            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Téléphone</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${phone || "—"}</td></tr>
-            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Secteur</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${sector}</td></tr>
-            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Mode</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${contactMethod}</td></tr>
-            <tr style="background: #f0f7ff;"><td style="padding: 12px 8px; color: #007AFF; font-weight: 600; font-size: 14px;">Créneau</td><td style="padding: 12px 8px; font-weight: 700; font-size: 16px; color: #007AFF;">${schedule}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Nom</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${safeName}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Email</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${safeEmail || "—"}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Téléphone</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${safePhone || "—"}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Secteur</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${safeSector}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666; font-size: 14px;">Mode</td><td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${safeContactMethod}</td></tr>
+            <tr style="background: #f0f7ff;"><td style="padding: 12px 8px; color: #007AFF; font-weight: 600; font-size: 14px;">Créneau</td><td style="padding: 12px 8px; font-weight: 700; font-size: 16px; color: #007AFF;">${safeSchedule}</td></tr>
           </table>
         </div>
       `,

@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { DM_Sans, Outfit, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
   variable: "--font-dm",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
   subsets: ["latin"],
   display: "swap",
 });
@@ -20,37 +14,109 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+const SITE_URL = "https://opexia-agency.com";
+const SITE_NAME = "OpexIA";
+const SITE_TITLE = "OpexIA — Agence IA & Automatisation pour Entreprises | Chatbots, Agents IA & Infrastructure";
+const SITE_DESCRIPTION =
+  "OpexIA est l'agence IA n°1 en France spécialisée dans l'automatisation des entreprises. Chatbots IA, agents intelligents, infrastructure IA, automatisation des processus métier. Audit gratuit, déploiement en 14 jours, ROI garanti. +50 entreprises accompagnées.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "OpexIA — Agence IA | Sites, Chatbots & Automatisations",
-    template: "%s | OpexIA",
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Agence IA sp\u00e9cialis\u00e9e : sites web, chatbots intelligents, automatisations et agents IA pour booster votre entreprise. Audit gratuit.",
+  description: SITE_DESCRIPTION,
   keywords: [
+    // Mots-clés principaux (head terms)
     "agence IA",
-    "chatbot IA",
+    "agence intelligence artificielle",
+    "agence automatisation",
+    "infrastructure IA",
     "automatisation entreprise",
-    "intelligence artificielle",
-    "site web IA",
+    // Mots-clés secondaires (mid-tail)
+    "chatbot IA entreprise",
+    "agent IA entreprise",
+    "automatisation processus métier",
+    "intégration IA entreprise",
+    "transformation digitale IA",
+    "déploiement IA",
+    "consultant IA",
+    "prestataire IA",
+    // Longue traîne (long-tail) — forte intention
+    "agence IA France",
+    "agence IA Paris",
+    "automatisation IA PME",
+    "chatbot intelligent entreprise",
+    "automatiser son entreprise avec IA",
+    "mise en place IA entreprise",
+    "audit IA gratuit",
+    "agence chatbot GPT",
+    "automatisation tâches répétitives IA",
+    "infrastructure intelligence artificielle entreprise",
+    "agents IA sur mesure",
+    "IA pour TPE PME",
+    "IA pour BTP",
+    "IA pour immobilier",
+    "IA pour commerce",
+    "IA pour cabinet comptable",
+    "ROI intelligence artificielle",
+    "gain de temps IA",
   ],
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   openGraph: {
-    title: "OpexIA \u2014 Agence IA | Sites, Chatbots & Automatisations",
-    description: "Agence IA sp\u00e9cialis\u00e9e : sites web, chatbots, automatisations et agents IA pour booster votre entreprise.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     type: "website",
     locale: "fr_FR",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "OpexIA — Agence IA & Automatisation pour Entreprises",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/og-image.png"],
+    creator: "@opexia_agency",
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  category: "technology",
+  creator: "OpexIA",
+  publisher: "OpexIA",
+  formatDetection: {
+    telephone: true,
+    email: true,
+  },
+  other: {
+    "google-site-verification": "",
   },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  themeColor: "#007AFF",
 };
 
 export default function RootLayout({
@@ -61,7 +127,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className="scroll-smooth">
       <body
-        className={`${dmSans.variable} ${outfit.variable} ${jetbrains.variable} antialiased`}
+        className={`${dmSans.variable} ${jetbrains.variable} antialiased`}
         style={{ fontFamily: "var(--font-dm), system-ui, sans-serif" }}
       >
         {children}

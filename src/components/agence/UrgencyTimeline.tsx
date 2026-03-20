@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { openLeadBot } from "@/lib/constants";
+import { openLeadBotBooking } from "@/lib/constants";
 
 const timeline = [
   { year: "2023", event: "ChatGPT explose. Tout le monde en parle, personne n'agit.", opacity: "text-white/30" },
@@ -34,7 +34,7 @@ export default function UrgencyTimeline() {
           </h2>
           <p className="mt-4 text-lg text-white/40">
             65% des entreprises d&eacute;clarent que l&apos;IA a am&eacute;lior&eacute; leur productivit&eacute;. O&ugrave; en &ecirc;tes-vous ?
-            <span className="block text-sm text-[#007AFF]/60 mt-2 font-medium">Source : McKinsey, The State of AI, 2025</span>
+            <span className="block text-sm text-[#007AFF]/60 mt-2 font-medium">Source : McKinsey Global Survey on AI, 2026</span>
           </p>
         </motion.div>
 
@@ -92,7 +92,7 @@ export default function UrgencyTimeline() {
           className="text-center mt-14"
         >
           <button
-            onClick={openLeadBot}
+            onClick={openLeadBotBooking}
             className="inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white hover:bg-[#0055D4] transition-all hover:shadow-xl hover:shadow-blue-900/30"
           >
             Demander mon diagnostic IA

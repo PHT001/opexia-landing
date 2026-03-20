@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { openLeadBot } from "@/lib/constants";
+import { openLeadBotBooking } from "@/lib/constants";
 
 export default function AgenceStickyMobileCTA() {
   const [show, setShow] = useState(false);
@@ -24,7 +24,7 @@ export default function AgenceStickyMobileCTA() {
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:hidden"
         >
           <motion.button
-            onClick={openLeadBot}
+            onClick={openLeadBotBooking}
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             className="inline-flex items-center rounded-full bg-[#007AFF] px-6 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(0,122,255,0.5),0_0_40px_rgba(0,122,255,0.25)]"

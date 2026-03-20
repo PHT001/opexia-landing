@@ -21,8 +21,8 @@ export default function FoundersSection() {
           {/* Founder cards */}
           <div className="flex justify-center gap-4 sm:gap-6 mb-10">
             {[
-              { name: "Marius", role: "Co-Fondateur", img: "/images/marius.png" },
-              { name: "Igor", role: "Co-Fondateur", img: "/images/igor.jpg" },
+              { name: "Marius", role: "Co-Fondateur", img: "/images/marius.png", linkedin: "https://linkedin.com/in/" },
+              { name: "Igor", role: "Co-Fondateur", img: "/images/igor.jpg", linkedin: "https://linkedin.com/in/" },
             ].map((founder) => (
               <div
                 key={founder.name}
@@ -40,13 +40,15 @@ export default function FoundersSection() {
                 <div className="text-left">
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold text-[#111]">{founder.name}</span>
-                    <Image
-                      src="/images/blinkedin.svg"
-                      alt="LinkedIn"
-                      width={16}
-                      height={16}
-                      className="h-4 w-4"
-                    />
+                    <a href={founder.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`LinkedIn de ${founder.name}`}>
+                      <Image
+                        src="/images/blinkedin.svg"
+                        alt="LinkedIn"
+                        width={16}
+                        height={16}
+                        className="h-4 w-4 hover:opacity-70 transition-opacity"
+                      />
+                    </a>
                   </div>
                   <p className="text-sm text-[#9CA3AF]">{founder.role}</p>
                 </div>

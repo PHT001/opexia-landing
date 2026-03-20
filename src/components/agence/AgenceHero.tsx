@@ -3,8 +3,7 @@
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import LazyVideo from "@/components/ui/LazyVideo";
-import { openLeadBot } from "@/lib/constants";
+import { openLeadBotBooking } from "@/lib/constants";
 
 const rotatingWords = ["automatise", "acc\u00e9l\u00e8re", "optimise"];
 
@@ -133,7 +132,7 @@ export default function AgenceHero() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
             >
               <button
-                onClick={openLeadBot}
+                onClick={openLeadBotBooking}
                 className="group inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-semibold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-200"
               >
                 Obtenir mon audit offert
@@ -141,7 +140,7 @@ export default function AgenceHero() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </button>
-              <a href="#resultats" className="text-[#6B7280] text-sm font-medium hover:text-[#111] transition-colors flex items-center gap-1.5 py-4">
+              <a href="#testimonials" className="text-[#6B7280] text-sm font-medium hover:text-[#111] transition-colors flex items-center gap-1.5 py-4">
                 Voir les r&eacute;sultats &darr;
               </a>
             </motion.div>

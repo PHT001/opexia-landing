@@ -1,15 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { openLeadBot } from "@/lib/constants";
+import { openLeadBotBooking } from "@/lib/constants";
 
 const footerLinks = [
-  { label: "Services", href: "#services" },
-  { label: "Résultats", href: "#resultats" },
   { label: "Processus", href: "#process" },
+  { label: "Témoignages", href: "#testimonials" },
   { label: "FAQ", href: "#faq" },
-  { label: "Formation", href: "/formation" },
 ];
 
 export default function AgenceFooter() {
@@ -28,7 +25,7 @@ export default function AgenceFooter() {
               <strong className="text-[#111]">1 heure</strong> pour d&eacute;couvrir ce que l&apos;IA peut changer. <strong className="text-[#111]">Gratuit.</strong>
             </p>
             <button
-              onClick={openLeadBot}
+              onClick={openLeadBotBooking}
               className="inline-flex items-center justify-center rounded-full bg-[#007AFF] px-8 py-4 text-base font-bold text-white transition-all hover:bg-[#0055D4] hover:shadow-xl hover:shadow-blue-500/20"
             >
               Prendre rendez-vous gratuit
@@ -52,21 +49,15 @@ export default function AgenceFooter() {
             </div>
 
             <nav className="flex flex-wrap items-center gap-6">
-              {footerLinks.map((link) =>
-                link.href.startsWith("/") ? (
-                  <Link key={link.label} href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors">
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a key={link.label} href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors">
-                    {link.label}
-                  </a>
-                )
-              )}
+              {footerLinks.map((link) => (
+                <a key={link.label} href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors">
+                  {link.label}
+                </a>
+              ))}
             </nav>
 
             <button
-              onClick={openLeadBot}
+              onClick={openLeadBotBooking}
               className="text-sm font-semibold text-[#007AFF] hover:text-[#0055D4] transition-colors"
             >
               R&eacute;server un audit &rarr;
