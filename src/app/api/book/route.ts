@@ -48,8 +48,18 @@ const VALID_CONTACT_METHODS = ["Appel téléphonique", "Google Meet"];
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX_ENTRIES = 10_000;
+
+function cleanupRateLimitMap() {
+  if (rateLimitMap.size <= RATE_LIMIT_MAX_ENTRIES) return;
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}
 
 function isRateLimited(ip: string): boolean {
+  cleanupRateLimitMap();
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
   if (!entry || now > entry.resetAt) {
@@ -59,6 +69,9 @@ function isRateLimited(ip: string): boolean {
   entry.count += 1;
   return entry.count > RATE_LIMIT_MAX;
 }
+
+/* ───── In-memory mutex to prevent race conditions on slot booking ───── */
+const pendingSlots = new Set<string>();
 
 /* ───── Google Calendar auth ───── */
 function getCalendarClient() {
@@ -250,13 +263,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
+    // Validate input lengths to prevent abuse
+    if (name.length > 100) {
+      return NextResponse.json({ error: "Nom trop long" }, { status: 400 });
+    }
+    if (schedule.length > 200) {
+      return NextResponse.json({ error: "Créneau invalide" }, { status: 400 });
+    }
+    if (phone && (typeof phone !== "string" || phone.length > 20)) {
+      return NextResponse.json({ error: "Téléphone invalide" }, { status: 400 });
+    }
+
     // Validate slotKey format
     if (!SLOT_KEY_REGEX.test(slotKey)) {
       return NextResponse.json({ error: "Format de créneau invalide" }, { status: 400 });
     }
 
     // Validate email format if provided
-    if (email && (typeof email !== "string" || !EMAIL_REGEX.test(email))) {
+    if (email && (typeof email !== "string" || email.length > 200 || !EMAIL_REGEX.test(email))) {
       return NextResponse.json({ error: "Email invalide" }, { status: 400 });
     }
 
@@ -270,6 +294,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Mode de contact invalide" }, { status: 400 });
     }
 
+    // Race condition guard: prevent concurrent booking of the same slot
+    if (pendingSlots.has(slotKey)) {
+      return NextResponse.json({ error: "Créneau en cours de réservation" }, { status: 409 });
+    }
+    pendingSlots.add(slotKey);
+
+    try {
     // Check if slot is already taken (from Google Calendar)
     let bookedSlots: string[];
     try {
@@ -386,6 +417,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ ok: true });
+    } finally {
+      pendingSlots.delete(slotKey);
+    }
   } catch (err: unknown) {
     console.error("Booking error:", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

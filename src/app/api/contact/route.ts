@@ -24,8 +24,18 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /* Simple in-memory rate limiting */
 const rateMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX_ENTRIES = 10_000;
+
+function cleanupRateMap() {
+  if (rateMap.size <= RATE_LIMIT_MAX_ENTRIES) return;
+  const now = Date.now();
+  for (const [key, entry] of rateMap) {
+    if (now > entry.resetAt) rateMap.delete(key);
+  }
+}
 
 function isRateLimited(ip: string): boolean {
+  cleanupRateMap();
   const now = Date.now();
   const entry = rateMap.get(ip);
   if (!entry || now > entry.resetAt) {
@@ -50,13 +60,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 });
     }
 
-    if (typeof name !== "string" || name.length > 100) {
+    if (typeof name !== "string" || name.trim().length === 0 || name.length > 100) {
       return NextResponse.json({ error: "Nom invalide" }, { status: 400 });
     }
-    if (typeof email !== "string" || !EMAIL_REGEX.test(email) || email.length > 200) {
+    if (typeof email !== "string" || email.length > 200 || !EMAIL_REGEX.test(email)) {
       return NextResponse.json({ error: "Email invalide" }, { status: 400 });
     }
-    if (typeof message !== "string" || message.length > 5000) {
+    if (typeof message !== "string" || message.trim().length === 0 || message.length > 5000) {
       return NextResponse.json({ error: "Message trop long" }, { status: 400 });
     }
 
