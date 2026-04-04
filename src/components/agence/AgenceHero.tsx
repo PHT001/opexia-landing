@@ -13,7 +13,7 @@ function TypewriterWord({ word }: { word: string }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="inline-flex text-[#FF0000]"
+      className="inline-flex text-[#007AFF]"
     >
       {word.split("").map((char, i) => (
         <motion.span
@@ -26,7 +26,7 @@ function TypewriterWord({ word }: { word: string }) {
         </motion.span>
       ))}
       <motion.span
-        className="inline-block w-[3px] h-[0.9em] bg-[#FF0000] ml-0.5 align-middle"
+        className="inline-block w-[3px] h-[0.9em] bg-[#007AFF] ml-0.5 align-middle"
         animate={{ opacity: [1, 0] }}
         transition={{ duration: 0.6, repeat: Infinity, ease: "linear", repeatType: "reverse" }}
       />
