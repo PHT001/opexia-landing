@@ -46,8 +46,8 @@ export default function AuditAnimation() {
   }, []);
 
   return (
-    <div className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden" style={{ minHeight: 380 }}>
-      <div className="relative w-full h-[380px] flex items-center justify-center">
+    <div className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden" style={{ minHeight: 280 }}>
+      <div className="relative w-full h-[280px] sm:h-[340px] lg:h-[380px] flex items-center justify-center">
 
         {/* Floating task icons — appear during spinning */}
         {phase === "spinning" && taskIcons.map((icon, i) => {

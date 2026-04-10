@@ -74,6 +74,18 @@ body {
   color: white;
 }
 
+/* Global focus-visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible, a:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
@@ -208,8 +220,8 @@ body {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { opacity: 0.15; filter: blur(60px); }
-  50% { opacity: 0.3; filter: blur(80px); }
+  0%, 100% { opacity: 0.15; filter: blur(50px); }
+  50% { opacity: 0.3; filter: blur(60px); }
 }
 
 @property --angle {
@@ -349,8 +361,9 @@ body {
     top: -150px; right: -100px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255, 23, 68, 0.03) 0%, transparent 70%);
-    filter: blur(80px);
+    filter: blur(60px);
     animation: ambient-float-1 20s ease-in-out infinite;
+    will-change: transform;
   }
   .platform-ambient::after {
     content: "";
@@ -359,8 +372,9 @@ body {
     bottom: -100px; left: -80px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255, 23, 68, 0.02) 0%, transparent 70%);
-    filter: blur(80px);
+    filter: blur(60px);
     animation: ambient-float-2 24s ease-in-out infinite;
+    will-change: transform;
   }
 
   @keyframes ambient-float-1 {
@@ -392,9 +406,10 @@ body {
 
   .glow-orb {
     position: fixed; border-radius: 50%; pointer-events: none;
-    filter: blur(80px);
+    filter: blur(60px);
     background: rgba(255, 255, 255, 0.06);
     animation: glow-breathe 5s ease-in-out infinite, orb-float 8s ease-in-out infinite;
+    will-change: transform, opacity;
     z-index: 0;
   }
   .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -100px; }
@@ -600,6 +615,25 @@ body {
   background: #F8F9FA;
   border-color: #E5E7EB;
   color: #111111;
+}
+
+/* ═══════════════════════════════
+   PAUSE ANIMATIONS ON INACTIVE TAB
+   Browsers auto-throttle animations in background tabs,
+   but this ensures immediate pause for GPU savings.
+   ═══════════════════════════════ */
+.tab-hidden .animate-marquee-right,
+.tab-hidden .animate-marquee-left,
+.tab-hidden .shooting-star,
+.tab-hidden .sparkle-star,
+.tab-hidden .glow-orb,
+.tab-hidden .platform-ambient::before,
+.tab-hidden .platform-ambient::after,
+.tab-hidden .animate-pulse-glow,
+.tab-hidden .animate-beam-1,
+.tab-hidden .animate-beam-2,
+.tab-hidden .animate-beam-3 {
+  animation-play-state: paused !important;
 }
 
 /* ═══════════════════════════════

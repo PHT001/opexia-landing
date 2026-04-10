@@ -64,7 +64,7 @@ export default function ProblemSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="group relative rounded-3xl bg-white border border-red-100 p-8 lg:p-10 overflow-hidden hover:border-red-200 transition-all duration-500"
+            className="group relative rounded-3xl bg-white border border-red-100 p-6 sm:p-8 lg:p-10 overflow-hidden hover:border-red-200 transition-all duration-500"
           >
             {/* Red glow effects */}
             <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-400/20 rounded-full blur-3xl pointer-events-none group-hover:bg-red-400/30 transition-all duration-500" />
@@ -105,7 +105,7 @@ export default function ProblemSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="group relative rounded-3xl bg-white border border-emerald-100 p-8 lg:p-10 overflow-hidden hover:border-emerald-200 transition-all duration-500"
+            className="group relative rounded-3xl bg-white border border-emerald-100 p-6 sm:p-8 lg:p-10 overflow-hidden hover:border-emerald-200 transition-all duration-500"
           >
             {/* Green glow effects */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-400/30 transition-all duration-500" />

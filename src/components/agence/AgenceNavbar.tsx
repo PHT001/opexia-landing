@@ -85,6 +85,8 @@ export default function AgenceNavbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             className="md:hidden flex flex-col gap-1.5 p-2"
             aria-label="Menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-menu"
           >
             <span className={`block h-0.5 w-5 bg-white transition-transform ${mobileOpen ? "rotate-45 translate-y-2" : ""}`} />
             <span className={`block h-0.5 w-5 bg-white transition-opacity ${mobileOpen ? "opacity-0" : ""}`} />
@@ -100,6 +102,7 @@ export default function AgenceNavbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
+            id="mobile-nav-menu"
             className="absolute top-full left-4 right-4 mt-2 rounded-2xl border border-white/[0.08] p-5"
             style={{
               background: "rgba(10, 10, 10, 0.9)",

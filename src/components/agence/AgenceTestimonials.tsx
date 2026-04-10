@@ -142,7 +142,7 @@ export default function AgenceTestimonials() {
           </div>
 
           {/* Right — Stacked card */}
-          <div className="relative h-[380px] sm:h-[320px]">
+          <div className="relative h-[340px] sm:h-[360px] lg:h-[380px]">
             {/* Background cards (stack effect) */}
             <div className="absolute top-4 left-4 right-[-4px] bottom-[-4px] rounded-2xl bg-gray-100 border border-gray-100" />
             <div className="absolute top-2 left-2 right-[-2px] bottom-[-2px] rounded-2xl bg-gray-50 border border-gray-100" />

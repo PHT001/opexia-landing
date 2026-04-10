@@ -28,6 +28,7 @@ const nextConfig: NextConfig = {
             "frame-ancestors 'none'",
             "frame-src 'none'",
             "object-src 'none'",
+            "media-src 'self'",
             "base-uri 'self'",
             "form-action 'self'",
             "upgrade-insecure-requests",

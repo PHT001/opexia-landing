@@ -7,23 +7,30 @@ import AgenceNavbar from "@/components/agence/AgenceNavbar";
 const WHATSAPP_NUMBER = "33756803717";
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", message: "", website: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("sending");
 
+    // Honeypot anti-bot check
+    if (form.website) {
+      setStatus("sent");
+      return;
+    }
+
     try {
+      const { website: _hp, ...formData } = form;
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(formData),
       });
 
       if (res.ok) {
         setStatus("sent");
-        setForm({ name: "", email: "", message: "" });
+        setForm({ name: "", email: "", message: "", website: "" });
       } else {
         setStatus("error");
       }
@@ -42,7 +49,7 @@ export default function ContactPage() {
   return (
     <>
       <AgenceNavbar />
-      <main className="min-h-screen bg-[#FAFAFA] pt-28 pb-20 px-6">
+      <main id="main-content" className="min-h-screen bg-[#FAFAFA] pt-28 pb-20 px-6">
         <div className="mx-auto max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -138,6 +145,19 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Honeypot field — hidden from real users, traps bots */}
+                <div className="absolute opacity-0 h-0 w-0 overflow-hidden" aria-hidden="true">
+                  <label htmlFor="website">Website</label>
+                  <input
+                    id="website"
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={form.website}
+                    onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))}
+                  />
+                </div>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-[#111] mb-1.5">
                     Pr&eacute;nom
@@ -150,7 +170,6 @@ export default function ContactPage() {
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     placeholder="Votre pr&eacute;nom"
                     className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none transition-all focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10"
-                    style={{ fontSize: "16px" }}
                   />
                 </div>
 
@@ -166,7 +185,6 @@ export default function ContactPage() {
                     onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                     placeholder="votre@email.com"
                     className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none transition-all focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10"
-                    style={{ fontSize: "16px" }}
                   />
                 </div>
 
@@ -182,7 +200,6 @@ export default function ContactPage() {
                     onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
                     placeholder="Comment pouvons-nous vous aider ?"
                     className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none transition-all focus:border-[#007AFF]/50 focus:ring-2 focus:ring-[#007AFF]/10 resize-none"
-                    style={{ fontSize: "16px" }}
                   />
                 </div>
 

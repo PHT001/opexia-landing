@@ -211,7 +211,7 @@ export default function SectorChat() {
                     </svg>
                     Cliquez sur votre secteur pour voir les résultats
                   </motion.p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 sm:gap-2.5">
                     {sectors.map((sector, i) => (
                       <motion.button
                         key={sector.name}

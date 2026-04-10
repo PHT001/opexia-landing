@@ -236,7 +236,7 @@ export async function GET() {
     const booked = await getBookedSlotsFromCalendar();
     return NextResponse.json({ booked });
   } catch (err) {
-    console.error("Failed to fetch booked slots:", err);
+    console.error("Failed to fetch booked slots:", err instanceof Error ? err.message : "Unknown error");
     return NextResponse.json({ error: "Impossible de récupérer les créneaux" }, { status: 500 });
   }
 }
@@ -306,7 +306,7 @@ export async function POST(req: Request) {
     try {
       bookedSlots = await getBookedSlotsFromCalendar();
     } catch (err) {
-      console.error("Calendar unavailable:", err);
+      console.error("Calendar unavailable:", err instanceof Error ? err.message : "Unknown error");
       return NextResponse.json({ error: "Service calendrier indisponible" }, { status: 503 });
     }
     if (bookedSlots.includes(slotKey)) {

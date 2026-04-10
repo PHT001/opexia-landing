@@ -125,12 +125,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="scroll-smooth">
+    <html lang="fr" className="scroll-smooth" suppressHydrationWarning>
       <body
         className={`${dmSans.variable} ${jetbrains.variable} antialiased`}
         style={{ fontFamily: "var(--font-dm), system-ui, sans-serif" }}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-[#007AFF] focus:px-4 focus:py-2 focus:text-white focus:text-sm focus:font-semibold focus:outline-none"
+        >
+          Aller au contenu principal
+        </a>
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.addEventListener("visibilitychange",function(){document.documentElement.classList.toggle("tab-hidden",document.hidden)})`,
+          }}
+        />
       </body>
     </html>
   );

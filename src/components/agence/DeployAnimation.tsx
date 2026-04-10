@@ -62,8 +62,8 @@ export default function DeployAnimation() {
   }, []);
 
   return (
-    <div className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden" style={{ minHeight: 380 }}>
-      <div className="p-5 h-[380px] flex flex-col">
+    <div className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden" style={{ minHeight: 280 }}>
+      <div className="p-4 sm:p-5 h-[280px] sm:h-[340px] lg:h-[380px] flex flex-col">
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-5">

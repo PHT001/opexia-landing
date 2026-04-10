@@ -15,7 +15,7 @@ export default function UrgencyTimeline() {
   return (
     <section className="relative py-16 lg:py-24 bg-[#0A0A0A] overflow-hidden">
       {/* Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#007AFF]/5 rounded-full blur-[120px]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] sm:w-[450px] lg:w-[600px] h-[150px] sm:h-[225px] lg:h-[300px] bg-[#007AFF]/5 rounded-full blur-[120px]" />
 
       <div className="relative mx-auto max-w-3xl px-6 lg:px-8">
         <motion.div

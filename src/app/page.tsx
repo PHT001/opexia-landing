@@ -17,6 +17,7 @@ export default function Home() {
     <>
       <JsonLd />
       <AgenceNavbar />
+      <main id="main-content">
       <AgenceHero />
       <ProblemSection />
       <UrgencyTimeline />
@@ -26,6 +27,7 @@ export default function Home() {
       <FoundersSection />
       <AgenceFAQ />
       <AgenceFooter />
+      </main>
       <AgenceStickyMobileCTA />
       <AgenceChatbot />
     </>
