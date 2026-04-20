@@ -28,7 +28,7 @@ interface Choice {
 }
 
 /* ───────── Flow Data ───────── */
-const WHATSAPP_NUMBER = "33756803717";
+const WHATSAPP_NUMBER = "33756885225";
 
 const SECTORS: Choice[] = [
   { label: "🏪 Commerce / Retail", value: "Commerce / Retail" },

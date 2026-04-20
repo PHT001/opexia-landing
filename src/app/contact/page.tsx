@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import AgenceNavbar from "@/components/agence/AgenceNavbar";
 
-const WHATSAPP_NUMBER = "33756803717";
+const WHATSAPP_NUMBER = "33756885225";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "", website: "" });
