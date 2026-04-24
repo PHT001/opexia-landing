@@ -42,9 +42,10 @@ const SECTORS: Choice[] = [
   { label: "🏢 Autre", value: "Autre" },
 ];
 
+const CAL_BOOKING_URL = "https://cal.com/opexia/30min";
+
 const CONTACTS: Choice[] = [
-  { label: "📞 Appel téléphonique", value: "Appel téléphonique" },
-  { label: "💻 Google Meet", value: "Google Meet" },
+  { label: "📅 Réserver un créneau", value: "Cal.com" },
 ];
 
 const EMAIL_DOMAINS = [
@@ -279,8 +280,14 @@ export default function AgenceChatbot() {
 
       case "contact":
         setAnswers((prev) => ({ ...prev, contactMethod: choice.value }));
-        setStep("name");
-        await addBotMessage("Quel est votre prénom ?", 600);
+        await addBotMessage(
+          "Parfait, je vous envoie sur notre page de réservation. Choisissez le créneau qui vous convient 🚀",
+          700
+        );
+        setTimeout(() => {
+          window.open(CAL_BOOKING_URL, "_blank", "noopener,noreferrer");
+          setIsOpen(false);
+        }, 1600);
         break;
     }
   };
