@@ -33,8 +33,12 @@ export function middleware(request: NextRequest) {
       );
     }
 
-    // CSRF: validate Origin on all POST requests
-    if (request.method === "POST") {
+    // Webhook endpoints authenticate themselves with a secret header
+    // and bypass the Origin/CSRF check (server-to-server callers don't send Origin)
+    const isWebhook = pathname === "/api/send-guide";
+
+    // CSRF: validate Origin on all POST requests except webhooks
+    if (request.method === "POST" && !isWebhook) {
       const origin = request.headers.get("origin");
       if (!isAllowedOrigin(origin)) {
         return NextResponse.json(
