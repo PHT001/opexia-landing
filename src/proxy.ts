@@ -20,7 +20,7 @@ function isAllowedOrigin(origin: string | null): boolean {
   return false;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   /* ───── API routes protection ───── */

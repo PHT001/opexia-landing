@@ -21,7 +21,7 @@ export default function FoundersSection() {
           {/* Founder cards */}
           <div className="flex justify-center gap-4 sm:gap-6 mb-10">
             {[
-              { name: "Marius", role: "Co-Fondateur", img: "/images/marius.png", linkedin: "https://linkedin.com/in/" },
+              { name: "Marius", role: "Co-Fondateur", img: "/images/marius.jpg", linkedin: "https://linkedin.com/in/" },
               { name: "Igor", role: "Co-Fondateur", img: "/images/igor.jpg", linkedin: "https://linkedin.com/in/" },
             ].map((founder) => (
               <div

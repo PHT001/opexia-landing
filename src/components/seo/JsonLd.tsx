@@ -13,7 +13,7 @@ const organizationSchema = {
     width: 200,
     height: 200,
   },
-  image: `${SITE_URL}/og-image.png`,
+  image: `${SITE_URL}/og-image.jpg`,
   description:
     "Agence IA spécialisée dans l'automatisation des entreprises. Chatbots IA, agents intelligents, infrastructure IA, automatisation des processus métier. Déploiement en 14 jours.",
   foundingDate: "2024",

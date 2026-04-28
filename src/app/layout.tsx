@@ -83,11 +83,11 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "OpexIA — Agence IA & Automatisation pour Entreprises",
-        type: "image/png",
+        type: "image/jpeg",
       },
     ],
   },
@@ -95,7 +95,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
     creator: "@opexia_agency",
   },
   alternates: {
@@ -105,8 +105,9 @@ export const metadata: Metadata = {
   creator: "OpexIA",
   publisher: "OpexIA",
   formatDetection: {
-    telephone: true,
-    email: true,
+    telephone: false,
+    email: false,
+    address: false,
   },
   other: {
     "google-site-verification": "",
