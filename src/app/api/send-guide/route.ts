@@ -64,46 +64,63 @@ function extractEmail(payload: TallyWebhookPayload): string | null {
 function renderEmailHtml(): string {
   return `<!doctype html>
 <html lang="fr">
-<head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#0a1a35;font-family:-apple-system,'Inter Tight',Segoe UI,sans-serif;color:#fff">
-  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0a1a35;padding:40px 20px">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <style>
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    @media (prefers-color-scheme: dark) {
+      .opexia-bg { background:#f1f5f9 !important; }
+      .opexia-card { background:#ffffff !important; }
+      .opexia-h1 { color:#0a1628 !important; }
+      .opexia-text { color:#334155 !important; }
+      .opexia-strong { color:#2563EB !important; }
+      .opexia-muted { color:#64748b !important; }
+      .opexia-bonus-bg { background:#f0f7ff !important; }
+      .opexia-cta-text { color:#ffffff !important; }
+    }
+  </style>
+</head>
+<body class="opexia-bg" style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,'Inter Tight',Segoe UI,sans-serif;color:#0a1628">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" class="opexia-bg" style="background:#f1f5f9;padding:40px 20px">
     <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;background:linear-gradient(145deg,#0a1a35 0%,#061230 100%);border-radius:16px;overflow:hidden;border:1px solid rgba(90,200,250,0.2)">
-        <tr><td style="padding:40px 40px 20px">
-          <div style="font-weight:800;font-size:28px;letter-spacing:-0.02em">
-            <span style="color:#fff">Opex</span><span style="color:#5AC8FA">IA</span>
+      <table width="560" cellpadding="0" cellspacing="0" role="presentation" class="opexia-card" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 20px rgba(10,22,40,0.06)">
+        <tr><td style="background:#0a1628;padding:32px 40px 28px">
+          <div style="font-weight:800;font-size:28px;letter-spacing:-0.02em;color:#ffffff">
+            <span style="color:#ffffff">Opex</span><span style="color:#60a5fa">IA</span>
           </div>
         </td></tr>
-        <tr><td style="padding:0 40px">
-          <h1 style="font-size:28px;line-height:1.2;color:#fff;margin:0 0 16px;font-weight:800">
+        <tr><td style="padding:36px 40px 8px">
+          <h1 class="opexia-h1" style="font-size:28px;line-height:1.2;color:#0a1628;margin:0 0 16px;font-weight:800">
             Ton guide OpexIA est arrivé 📘
           </h1>
-          <p style="font-size:16px;line-height:1.6;color:rgba(255,255,255,0.8);margin:0 0 20px">
-            Bien reçu, voilà <b style="color:#5AC8FA">Comment automatiser vos processus par l'IA</b> en pièce jointe de ce mail.
+          <p class="opexia-text" style="font-size:16px;line-height:1.6;color:#334155;margin:0 0 20px">
+            Bien reçu, voilà <b class="opexia-strong" style="color:#2563EB">Comment automatiser vos processus par l'IA</b> en pièce jointe de ce mail.
           </p>
-          <p style="font-size:16px;line-height:1.6;color:rgba(255,255,255,0.8);margin:0 0 24px">
+          <p class="opexia-text" style="font-size:16px;line-height:1.6;color:#334155;margin:0 0 16px">
             À l'intérieur :
           </p>
-          <ul style="color:rgba(255,255,255,0.8);font-size:15px;line-height:1.8;padding-left:20px;margin:0 0 24px">
+          <ul class="opexia-text" style="color:#334155;font-size:15px;line-height:1.8;padding-left:20px;margin:0 0 28px">
             <li>Les 5 processus à automatiser en priorité (gain temps chiffré)</li>
             <li>Le ROI réel : -80% temps, +30% capacité, ROI en 4 à 8 semaines</li>
             <li>Le plan de déploiement en 30 jours, étape par étape</li>
             <li>Un cas client concret avec les chiffres avant/après</li>
           </ul>
         </td></tr>
-        <tr><td style="padding:0 40px 32px">
-          <div style="background:linear-gradient(145deg,rgba(90,200,250,0.12),rgba(90,200,250,0.03));border:1px solid rgba(90,200,250,0.35);border-radius:12px;padding:24px">
-            <p style="font-size:14px;color:rgba(255,255,255,0.7);margin:0 0 8px;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Bonus</p>
-            <p style="font-size:16px;color:#fff;margin:0 0 16px;line-height:1.5">
+        <tr><td style="padding:0 40px 36px">
+          <div class="opexia-bonus-bg" style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:12px;padding:24px">
+            <p style="font-size:13px;color:#2563EB;margin:0 0 8px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">Bonus</p>
+            <p class="opexia-h1" style="font-size:16px;color:#0a1628;margin:0 0 18px;line-height:1.5">
               Envie qu'on regarde ensemble <b>tes</b> 2-3 processus les plus rentables à automatiser ?
             </p>
-            <a href="https://cal.com/opexia/30min" style="display:inline-block;background:linear-gradient(135deg,#5AC8FA 0%,#4A9EFF 100%);color:#0a1a35;font-weight:700;font-size:15px;padding:12px 24px;border-radius:8px;text-decoration:none">
+            <a href="https://cal.com/opexia/30min" class="opexia-cta-text" style="display:inline-block;background:#2563EB;color:#ffffff;font-weight:700;font-size:15px;padding:14px 26px;border-radius:10px;text-decoration:none">
               Réserver un audit 30 min (offert) →
             </a>
           </div>
         </td></tr>
-        <tr><td style="padding:20px 40px 40px;border-top:1px solid rgba(255,255,255,0.08)">
-          <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0;line-height:1.5">
+        <tr><td style="padding:20px 40px 40px;border-top:1px solid #e2e8f0">
+          <p class="opexia-muted" style="font-size:12px;color:#94a3b8;margin:0;line-height:1.5">
             OpexIA · Agence IA · automatisation des processus<br>
             Ce guide t'est envoyé parce que tu l'as demandé depuis LinkedIn.
           </p>

@@ -214,7 +214,13 @@ function buildHostEmail(p: CalPayload): {
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="utf-8"><title>${escapeHtml(meta.subject)}</title></head>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(meta.subject)}</title>
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <style>:root { color-scheme: light only; supported-color-schemes: light only; }</style>
+</head>
 <body style="margin:0;padding:24px;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0a1628;">
   <div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(10,22,40,0.08);">
     <div style="background:${meta.color};padding:24px 28px;color:white;">
