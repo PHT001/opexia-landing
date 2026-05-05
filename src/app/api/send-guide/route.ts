@@ -79,16 +79,16 @@ function renderEmailHtml(): string {
             Ton guide OpexIA est arrivé 📘
           </h1>
           <p style="font-size:16px;line-height:1.6;color:rgba(255,255,255,0.8);margin:0 0 20px">
-            Bien reçu, voilà <b style="color:#5AC8FA">Les 10 automatisations IA les plus rentables pour ton cabinet comptable</b> en pièce jointe de ce mail.
+            Bien reçu, voilà <b style="color:#5AC8FA">Comment automatiser vos processus par l'IA</b> en pièce jointe de ce mail.
           </p>
           <p style="font-size:16px;line-height:1.6;color:rgba(255,255,255,0.8);margin:0 0 24px">
             À l'intérieur :
           </p>
           <ul style="color:rgba(255,255,255,0.8);font-size:15px;line-height:1.8;padding-left:20px;margin:0 0 24px">
-            <li>Les 3 tâches qui te bouffent 15h/semaine (et comment les tuer)</li>
-            <li>Les outils IA que j'utilise chez mes clients (avec prix)</li>
-            <li>Le plan de déploiement en 14 jours, étape par étape</li>
-            <li>Les erreurs à éviter (vu chez 8 cabinets ce mois-ci)</li>
+            <li>Les 5 processus à automatiser en priorité (gain temps chiffré)</li>
+            <li>Le ROI réel : -80% temps, +30% capacité, ROI en 4 à 8 semaines</li>
+            <li>Le plan de déploiement en 30 jours, étape par étape</li>
+            <li>Un cas client concret avec les chiffres avant/après</li>
           </ul>
         </td></tr>
         <tr><td style="padding:0 40px 32px">
@@ -104,8 +104,8 @@ function renderEmailHtml(): string {
         </td></tr>
         <tr><td style="padding:20px 40px 40px;border-top:1px solid rgba(255,255,255,0.08)">
           <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0;line-height:1.5">
-            OpexIA · Agence IA française · Cabinets comptables<br>
-            Ce guide t'es envoyé parce que tu l'as demandé depuis notre post LinkedIn.
+            OpexIA · Agence IA · automatisation des processus<br>
+            Ce guide t'est envoyé parce que tu l'as demandé depuis LinkedIn.
           </p>
         </td></tr>
       </table>
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: "OpexIA <guide@opexia-agency.com>",
       to: [email],
-      subject: "📘 Ton guide OpexIA — Les 10 automatisations IA rentables pour ton cabinet",
+      subject: "📘 Ton guide OpexIA — Automatiser vos processus par l'IA",
       html: renderEmailHtml(),
       attachments: [
         {
