@@ -180,7 +180,7 @@ const faqSchema = {
       name: "Mon secteur est trop spécifique pour l'IA",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "On a accompagné des clients dans 8 secteurs différents : BTP, immobilier, santé, e-commerce, restauration, logistique, cabinets comptables... L'IA s'adapte à tout. Et c'est justement notre job de l'adapter à votre métier.",
+        text: "On a accompagné des clients dans 8 secteurs différents : BTP, immobilier, santé, e-commerce, restauration, logistique, conseil... L'IA s'adapte à tout. Et c'est justement notre job de l'adapter à votre métier.",
       },
     },
     {

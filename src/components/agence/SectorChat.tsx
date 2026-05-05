@@ -72,12 +72,12 @@ const sectors: Sector[] = [
     ],
   },
   {
-    name: "Cabinet Comptable",
-    icon: "📊",
+    name: "Consulting & Services",
+    icon: "💼",
     automations: [
-      { icon: "🧾", title: "Saisie comptable par IA", result: "-2h/jour", percent: 95 },
-      { icon: "📧", title: "Relances impayés auto", result: "0 oubli", percent: 100 },
-      { icon: "📄", title: "Génération bilans", result: "3x plus rapide", percent: 88 },
+      { icon: "📨", title: "Pré-rédaction emails clients", result: "-2h/jour", percent: 95 },
+      { icon: "📧", title: "Relances factures auto", result: "0 oubli", percent: 100 },
+      { icon: "📄", title: "Comptes-rendus par IA", result: "3x plus rapide", percent: 88 },
       { icon: "💬", title: "Chatbot client 24/7", result: "Réponse instant.", percent: 92 },
     ],
   },

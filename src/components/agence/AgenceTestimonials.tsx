@@ -17,9 +17,9 @@ const testimonials = [
   {
     quote: "On envoyait nos devis en 48h. Maintenant c'est le jour même, automatiquement. On a signé 2 clients de plus le premier trimestre.",
     name: "Sophie Durand",
-    role: "Gérante — Cabinet comptable, Paris 8e",
+    role: "Gérante — Société de conseil, Paris 8e",
     result: "2 clients supplémentaires",
-    sector: "Comptabilité",
+    sector: "Conseil",
     img: "https://i.pravatar.cc/150?img=5",
   },
   {

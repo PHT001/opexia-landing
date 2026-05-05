@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     "IA pour BTP",
     "IA pour immobilier",
     "IA pour commerce",
-    "IA pour cabinet comptable",
+    "IA pour consulting",
     "ROI intelligence artificielle",
     "gain de temps IA",
   ],

@@ -26,7 +26,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Mon secteur est trop spécifique pour l'IA",
-    a: <>On a accompagné des clients dans <B>8 secteurs différents</B> : BTP, immobilier, santé, e-commerce, restauration, logistique, cabinets comptables... <B>L&apos;IA s&apos;adapte à tout</B>. Et c&apos;est justement notre job de l&apos;adapter à votre métier.</>,
+    a: <>On a accompagné des clients dans <B>8 secteurs différents</B> : BTP, immobilier, santé, e-commerce, restauration, logistique, conseil... <B>L&apos;IA s&apos;adapte à tout</B>. Et c&apos;est justement notre job de l&apos;adapter à votre métier.</>,
   },
   {
     q: "Je n'y connais rien en intelligence artificielle",

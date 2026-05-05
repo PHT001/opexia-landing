@@ -6,10 +6,10 @@ import { openLeadBotBooking } from "@/lib/constants";
 
 const cases = [
   {
-    sector: "Cabinet Comptable",
-    icon: "📊",
-    metric: "Saisie de factures",
-    before: { value: "4h", unit: "/ jour", detail: "3 employés mobilisés" },
+    sector: "Conseil & Services",
+    icon: "💼",
+    metric: "Pré-rédaction emails clients",
+    before: { value: "4h", unit: "/ jour", detail: "3 collaborateurs mobilisés" },
     after: { value: "45 min", unit: "/ jour", detail: "1 seul contrôle humain" },
     saving: "22 000€ / an économisés",
   },
