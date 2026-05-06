@@ -47,7 +47,10 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[bank/init]", err);
     return NextResponse.json(
-      { error: "Échec de la création de la connexion bancaire" },
+      {
+        error: "Échec de la création de la connexion bancaire",
+        detail: (err as Error).message,
+      },
       { status: 500 },
     );
   }
