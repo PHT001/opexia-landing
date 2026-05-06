@@ -129,8 +129,9 @@ async function userCall<T>(
 // MARK: - Public API — app-scoped
 
 export async function ensureUser(externalUserId: string): Promise<BridgeUser> {
-  // POST /v3/aggregation/users — idempotent en pratique : si l'external_user_id
-  // existe déjà, Bridge renvoie une 422 que l'on rattrape pour relire l'user.
+  // POST /v3/aggregation/users. Si l'external_user_id existe déjà côté
+  // Bridge, on reçoit un 409 (already_exists_with_external_user_id) que l'on
+  // rattrape pour retomber sur l'authorization endpoint.
   try {
     return await appCall<BridgeUser>("/v3/aggregation/users", {
       method: "POST",
@@ -138,8 +139,10 @@ export async function ensureUser(externalUserId: string): Promise<BridgeUser> {
     });
   } catch (e) {
     const msg = (e as Error).message;
-    if (!msg.includes("422")) throw e;
-    // Already exists — on retombe sur l'auth pour récupérer le user
+    const alreadyExists =
+      msg.includes("409") ||
+      msg.includes("already_exists_with_external_user_id");
+    if (!alreadyExists) throw e;
     const auth = await getUserToken(externalUserId);
     return auth.user;
   }
