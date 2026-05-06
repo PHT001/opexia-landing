@@ -56,10 +56,10 @@ export default function BankCallback() {
             opacity: 0,
             transition: "opacity 0.4s",
             fontSize: 12,
-            opacity: 0.5,
+            color: "rgba(255,255,255,0.5)",
           }}
         >
-          Pas d'app Talix installée ? Tu peux fermer cette page.
+          Pas d&apos;app Talix installée ? Tu peux fermer cette page.
         </div>
       </div>
     </div>
