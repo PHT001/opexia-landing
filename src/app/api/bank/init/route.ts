@@ -1,58 +1,51 @@
 import { NextResponse } from "next/server";
-import { createRequisition, listInstitutions } from "@/lib/gocardless";
+import { ensureUser, getUserToken, createConnectSession } from "@/lib/bridge";
 
-const REDIRECT_URL = process.env.TALIX_BANK_REDIRECT || "talix://bank/connected";
+const REDIRECT_URL =
+  process.env.TALIX_BANK_REDIRECT || "talix://bank/connected";
 
 /**
  * POST /api/bank/init
- * Body : { institutionId: string }
- *   Si institutionId absent, retourne la liste des banques FR.
- *   Si présent, crée une requisition et retourne { link, requisitionId }.
+ * Body : { externalUserId: string, userEmail?: string }
+ *   Crée (ou récupère) un user Bridge mappé sur externalUserId, retourne
+ *   { url, sessionId } pour rediriger l'app vers la page de connexion banque.
+ *   L'app iOS génère son externalUserId au 1er lancement (UUID stable).
  */
 export async function POST(req: Request) {
-  let body: { institutionId?: string; country?: string } = {};
+  let body: { externalUserId?: string; userEmail?: string } = {};
   try {
     body = await req.json();
   } catch {
     body = {};
   }
 
-  // Pas d'institutionId → renvoie la liste des banques (browse mode)
-  if (!body.institutionId) {
-    try {
-      const country = (body.country || "FR").toUpperCase();
-      const institutions = await listInstitutions(country);
-      return NextResponse.json({
-        institutions: institutions.map((i) => ({
-          id: i.id,
-          name: i.name,
-          logo: i.logo,
-          bic: i.bic,
-          transactionDays: parseInt(i.transaction_total_days || "90", 10),
-        })),
-      });
-    } catch (err) {
-      console.error("[bank/init] listInstitutions", err);
-      return NextResponse.json(
-        { error: "Impossible de récupérer la liste des banques" },
-        { status: 500 },
-      );
-    }
+  if (!body.externalUserId) {
+    return NextResponse.json(
+      { error: "externalUserId requis" },
+      { status: 400 },
+    );
   }
 
-  // institutionId fourni → on crée la requisition
   try {
-    const r = await createRequisition({
-      institutionId: body.institutionId,
-      redirectUrl: REDIRECT_URL,
+    await ensureUser(body.externalUserId);
+    const auth = await getUserToken(body.externalUserId);
+    const session = await createConnectSession({
+      accessToken: auth.access_token,
+      userEmail: body.userEmail || `${body.externalUserId}@talix.app`,
+      callbackUrl: REDIRECT_URL,
+      countryCode: "FR",
     });
+
     return NextResponse.json({
-      requisitionId: r.id,
-      link: r.link,
-      status: r.status,
+      sessionId: session.id,
+      link: session.url,
+      // Pour rétrocompat avec l'ancien client iOS : on renvoie aussi
+      // requisitionId (qui pointe sur sessionId côté Bridge).
+      requisitionId: session.id,
+      status: "PENDING",
     });
   } catch (err) {
-    console.error("[bank/init] createRequisition", err);
+    console.error("[bank/init]", err);
     return NextResponse.json(
       { error: "Échec de la création de la connexion bancaire" },
       { status: 500 },
