@@ -36,7 +36,9 @@ export function proxy(request: NextRequest) {
     // Webhook endpoints authenticate themselves with a secret header
     // and bypass the Origin/CSRF check (server-to-server callers don't send Origin)
     const isWebhook =
-      pathname === "/api/send-guide" || pathname === "/api/cal-webhook";
+      pathname === "/api/send-guide" ||
+      pathname === "/api/cal-webhook" ||
+      pathname.startsWith("/api/bank/");
 
     // CSRF: validate Origin on all POST requests except webhooks
     if (request.method === "POST" && !isWebhook) {
